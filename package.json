@@ -1,0 +1,18 @@
+{
+  "name": "a2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "In this assignment, the goals are: 1. Understand how shapes are represented in Three.js (and most 3D engines) by manually creating a cube geometry. (2.5pts) 2. Implement a set of geometric transformations (translation, rotation, scaling) using model transformation matrices. (12.5pts) 3. Make the transformations depend on time, which will allow us to create a swinging effect animation. (2.5pts) 4. Draw the outline of the cube instead of the faces. (2.5pts) 5. Add user input via pressing specific keys. We will switch between wireframe and solid view of the cubes. (5pts)",
+  "dependencies": {
+    "three": "^0.168.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.14"
+  }
+}
