@@ -84,11 +84,11 @@ scene.add(basketball);
 let stripe_geometry = new THREE.CylinderGeometry(1.05, 1.05, 0.1, 32);
 let stripe_material = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Black color
 let stripe1 = new THREE.Mesh(stripe_geometry, stripe_material);
-let stripe2 = new THREE.Mesh(stripe_geometry, stripe_material);
-let stripe3 = new THREE.Mesh(stripe_geometry, stripe_material);
-let stripe4 = new THREE.Mesh(stripe_geometry, stripe_material);
+let stripe2 = stripe1.clone();
+let stripe3 = stripe1.clone();
+let stripe4 = stripe1.clone();
 scene.add(stripe1);
-stripe2.rotation.x = Math.PI / 2;
+stripe2.rotation.z = Math.PI / 2;
 scene.add(stripe2);
 stripe3.scale.set(Math.sqrt(3)/2, 1, Math.sqrt(3)/2);
 stripe3.translateY(0.5);
@@ -120,6 +120,15 @@ scene.add(hoop);
 // Attach the hoop to the backboard
 backboard.add(hoop);
 
+// Create bounding boxes
+basketball.geometry.computeBoundingBox();
+backboard.geometry.computeBoundingBox();
+hoop.geometry.computeBoundingBox();
+
+// Clone bounding boxes to update positions dynamically
+let basketballBoundingBox = new THREE.Box3().setFromObject(basketball);
+let backboardBoundingBox = new THREE.Box3().setFromObject(backboard);
+let hoopBoundingBox = new THREE.Box3().setFromObject(hoop);
 
 // Reminder: y green x red z blue
 
@@ -136,6 +145,29 @@ function animate() {
 
   //   // TODO
   //   // Animate the cube
+
+  if (throwed) {
+    basketball.translateZ(-100 * delta_animation_time);
+    basketballBoundingBox.setFromObject(basketball);
+  
+    // Check for collision with backboard
+    if (basketballBoundingBox.intersectsBox(backboardBoundingBox)) {
+        console.log("Collision with Backboard!");
+        throwed = false; // Stop movement or add bounce effect
+    }
+
+    // Check for collision with hoop
+    if (basketballBoundingBox.intersectsBox(hoopBoundingBox)) {
+        console.log("Collision with Hoop!");
+        throwed = false;
+    }
+  }
+  
+  if (basketball.position.z < -200){
+    basketball.position.set(0, 0, 0);
+    throwed = false;
+  }
+  // console.log(basketball.position);
 
 }
 renderer.setAnimationLoop( animate );
