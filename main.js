@@ -1,194 +1,93 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 const scene = new THREE.Scene();
-
-//THREE.PerspectiveCamera( fov angle, aspect ratio, near depth, far depth );
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight );
-document.body.appendChild( renderer.domElement );
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-camera.position.set(0, 5, 10);
-controls.target.set(0, 5, 0);
-
-// Rendering 3D axis
-const createAxisLine = (color, start, end) => {
-    const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
-    const material = new THREE.LineBasicMaterial({ color: color });
-    return new THREE.Line(geometry, material);
-};
-const xAxis = createAxisLine(0xff0000, new THREE.Vector3(0, 0, 0), new THREE.Vector3(3, 0, 0)); // Red
-const yAxis = createAxisLine(0x00ff00, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 3, 0)); // Green
-const zAxis = createAxisLine(0x0000ff, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 3)); // Blue
-scene.add(xAxis);
-scene.add(yAxis);
-scene.add(zAxis);
-
-// Setting up the lights
-const pointLight = new THREE.PointLight(0xffffff, 100, 100);
-pointLight.position.set(5, 5, 5); // Position the light
-scene.add(pointLight);
-
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(0.5, .0, 1.0).normalize();
-scene.add(directionalLight);
-
-const ambientLight = new THREE.AmbientLight(0x505050);  // Soft white light
+// Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
+const spotLight = new THREE.SpotLight(0xffffff, 1.5, 50, Math.PI / 4, 0.5);
+spotLight.position.set(0, 10, 0);
+scene.add(spotLight);
 
-const phong_material = new THREE.MeshPhongMaterial({
-    color: 0x00ff00, // Green color
-    shininess: 100   // Shininess of the material
-});
+// Floor (Court)
+const floorGeometry = new THREE.PlaneGeometry(20, 10);
+const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xd2691e });
+const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
 
-// Transformation Matrix
-
-function translationMatrix(tx, ty, tz) {
-	return new THREE.Matrix4().set(
-		1, 0, 0, tx,
-		0, 1, 0, ty,
-		0, 0, 1, tz,
-		0, 0, 0, 1
-	);
-}
-
-function rotationMatrixZ(theta) {
-  return new THREE.Matrix4().set(
-    Math.cos(theta),-Math.sin(theta), 0, 0,
-    Math.sin(theta), Math.cos(theta), 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  );
-}
-
-function scaleMatrix(sx, sy, sz) {
-  return new THREE.Matrix4().set(
-    sx, 0, 0, 0,
-    0, sy, 0, 0,
-    0, 0, sz, 0,
-    0, 0, 0, 1
-  );
-}
-
-// TODO: Create basketball
-let basketball_geometry = new THREE.SphereGeometry(1, 32, 32);
-let basketball_material = new THREE.MeshBasicMaterial({ color: 0xffa500 }); // Orange color
-let basketball = new THREE.Mesh(basketball_geometry, basketball_material);
-scene.add(basketball);
-
-// TODO: Create basketball black stripes
-let stripe_geometry = new THREE.CylinderGeometry(1.05, 1.05, 0.1, 32);
-let stripe_material = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Black color
-let stripe1 = new THREE.Mesh(stripe_geometry, stripe_material);
-let stripe2 = stripe1.clone();
-let stripe3 = stripe1.clone();
-let stripe4 = stripe1.clone();
-scene.add(stripe1);
-stripe2.rotation.z = Math.PI / 2;
-scene.add(stripe2);
-stripe3.scale.set(Math.sqrt(3)/2, 1, Math.sqrt(3)/2);
-stripe3.translateY(0.5);
-scene.add(stripe3);
-stripe4.scale.set(Math.sqrt(3)/2, 1, Math.sqrt(3)/2);
-stripe4.translateY(-0.5);
-scene.add(stripe4);
-
-// Attach the stripes to the basketball
-basketball.add(stripe1);
-basketball.add(stripe2);  
-basketball.add(stripe3);
-basketball.add(stripe4);
-
-// TODO: Create backboard and hoop
-let backboard_geometry = new THREE.BoxGeometry(2, 2, 0.1);
-let backboard_material = new THREE.MeshBasicMaterial({ color: 0xffffff }); // White color
-let backboard = new THREE.Mesh(backboard_geometry, backboard_material);
-backboard.position.set(0, 0, -6.05);
+// Backboard
+const backboardGeometry = new THREE.BoxGeometry(2, 1, 0.1);
+const backboardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+const backboard = new THREE.Mesh(backboardGeometry, backboardMaterial);
+backboard.position.set(0, 3, -4.9);
 scene.add(backboard);
 
-let hoop_geometry = new THREE.TorusGeometry(1.05, 0.05, 16, 100);
-let hoop_material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color
-let hoop = new THREE.Mesh(hoop_geometry, hoop_material);
-hoop.translateZ(1.1);
-hoop.rotation.x = Math.PI / 2;
-scene.add(hoop);
+// Rim
+const rimGeometry = new THREE.TorusGeometry(0.25, 0.05, 16, 100);
+const rimMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+rim.position.set(0, 2.5, -4.75);
+rim.rotation.x = Math.PI / 2;
+scene.add(rim);
 
-// Attach the hoop to the backboard
-backboard.add(hoop);
+// Controls
+const controls = new PointerLockControls(camera, document.body);
+document.addEventListener('click', () => controls.lock());
+scene.add(controls.getObject());
 
-// Reminder: y green x red z blue
-const clock = new THREE.Clock();
-// Not declare MAX_ANGLE with const gives error for some reason
-const scale_factor = 0.1;
-let angle = 10;
-let velocity = 0;
-let old_time = 0;
-let time;
-let current_time;
-let universal_time;
+// Movement
+const keys = {};
+document.addEventListener('keydown', (event) => (keys[event.code] = true));
+document.addEventListener('keyup', (event) => (keys[event.code] = false));
+const speed = 0.1;
+
+// Ball shooting
+const balls = [];
+function shootBall() {
+    const ballGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+    const ballMaterial = new THREE.MeshStandardMaterial({ color: 0xffa500 });
+    const ball = new THREE.Mesh(ballGeometry, ballMaterial);
+    scene.add(ball);
+    
+    ball.position.copy(camera.position);
+    const direction = new THREE.Vector3();
+    camera.getWorldDirection(direction);
+    
+    balls.push({ mesh: ball, velocity: direction.multiplyScalar(0.5) });
+}
+
+document.addEventListener('keydown', (event) => {
+    if (event.code === 'Space') {
+        shootBall();
+    }
+});
 
 function animate() {
-  // ...
-
-	renderer.render( scene, camera );
-  controls.update();
-
-  //   // TODO
-  //   // Animate the cube
-
-  universal_time = clock.getElapsedTime();
-  let velocity_y = velocity * Math.sin(angle * Math.PI / 180);
-  let velocity_z = velocity * Math.cos(angle * Math.PI / 180);
-  let acceleration_y = -0.98;
-
-  if (throwed) {
-    current_time = clock.getElapsedTime();
-    time = current_time - old_time;
-    basketball.translateZ( - scale_factor * velocity_y * time);
-    basketball.translateY(scale_factor * (velocity_z * time) + 0.5 * acceleration_y * Math.pow(time, 2));
-  }
-
-  if (basketball.position.z < -200 || basketball.position.y < -20 || basketball.position.y > 200){
-    basketball.position.set(0, 0, 0);
-    angle = 10;
-    velocity = 0;
-    throwed = false;
-  }
+    requestAnimationFrame(animate);
+    if (keys['KeyW']) controls.moveForward(speed);
+    if (keys['KeyS']) controls.moveForward(-speed);
+    if (keys['KeyA']) controls.moveRight(-speed);
+    if (keys['KeyD']) controls.moveRight(speed);
+    
+    balls.forEach((ballObj) => {
+        ballObj.mesh.position.add(ballObj.velocity);
+    });
+    
+    renderer.render(scene, camera);
 }
-renderer.setAnimationLoop( animate );
 
-// TODO: Add event listener
-let throwed = false;
-window.addEventListener('keydown', onKeyPress); // onKeyPress is called each time a key is pressed
-// Function to handle keypress
-function onKeyPress(event) {
-    switch (event.key) {
-        case ' ':
-            throwed = true;
-            old_time = clock.getElapsedTime();
-            break;
-        case 'ArrowUp':
-            angle += 10;
-            console.log(`Angle is changed to ${angle}`);
-            break;
-        case 'ArrowDown':
-            angle -= 10;
-            console.log(`Angle is changed to ${angle}`);
-            break;
-        case 'ArrowRight':
-            velocity += 1;
-            console.log(`Velocity is changed to ${velocity}`);
-            break;
-        case 'ArrowLeft':
-            velocity -= 1;
-            console.log(`Velocity is changed to ${velocity}`);
-            break;
-        default:
-            console.log(`Key ${event.key} pressed`);
-    }
-    console.log(`Key ${event.key} pressed`);
-}
+camera.position.set(0, 1.5, 5);
+animate();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
