@@ -120,25 +120,19 @@ scene.add(hoop);
 // Attach the hoop to the backboard
 backboard.add(hoop);
 
-// Create bounding boxes
-basketball.geometry.computeBoundingBox();
-backboard.geometry.computeBoundingBox();
-hoop.geometry.computeBoundingBox();
-
-// Clone bounding boxes to update positions dynamically
-let basketballBoundingBox = new THREE.Box3().setFromObject(basketball);
-let backboardBoundingBox = new THREE.Box3().setFromObject(backboard);
-let hoopBoundingBox = new THREE.Box3().setFromObject(hoop);
-
 // Reminder: y green x red z blue
-
-let delta_animation_time;
 const clock = new THREE.Clock();
 // Not declare MAX_ANGLE with const gives error for some reason
+const scale_factor = 0.1;
+let angle = 10;
+let velocity = 0;
+let old_time = 0;
+let time;
+let current_time;
+let universal_time;
 
 function animate() {
   // ...
-  delta_animation_time = clock.getDelta();
 
 	renderer.render( scene, camera );
   controls.update();
@@ -146,29 +140,24 @@ function animate() {
   //   // TODO
   //   // Animate the cube
 
-  if (throwed) {
-    basketball.translateZ(-100 * delta_animation_time);
-    basketballBoundingBox.setFromObject(basketball);
-  
-    // Check for collision with backboard
-    if (basketballBoundingBox.intersectsBox(backboardBoundingBox)) {
-        console.log("Collision with Backboard!");
-        throwed = false; // Stop movement or add bounce effect
-    }
+  universal_time = clock.getElapsedTime();
+  let velocity_y = velocity * Math.sin(angle * Math.PI / 180);
+  let velocity_z = velocity * Math.cos(angle * Math.PI / 180);
+  let acceleration_y = -0.98;
 
-    // Check for collision with hoop
-    if (basketballBoundingBox.intersectsBox(hoopBoundingBox)) {
-        console.log("Collision with Hoop!");
-        throwed = false;
-    }
+  if (throwed) {
+    current_time = clock.getElapsedTime();
+    time = current_time - old_time;
+    basketball.translateZ( - scale_factor * velocity_y * time);
+    basketball.translateY(scale_factor * (velocity_z * time) + 0.5 * acceleration_y * Math.pow(time, 2));
   }
-  
-  if (basketball.position.z < -200){
+
+  if (basketball.position.z < -200 || basketball.position.y < -20 || basketball.position.y > 200){
     basketball.position.set(0, 0, 0);
+    angle = 10;
+    velocity = 0;
     throwed = false;
   }
-  // console.log(basketball.position);
-
 }
 renderer.setAnimationLoop( animate );
 
@@ -180,8 +169,26 @@ function onKeyPress(event) {
     switch (event.key) {
         case ' ':
             throwed = true;
+            old_time = clock.getElapsedTime();
+            break;
+        case 'ArrowUp':
+            angle += 10;
+            console.log(`Angle is changed to ${angle}`);
+            break;
+        case 'ArrowDown':
+            angle -= 10;
+            console.log(`Angle is changed to ${angle}`);
+            break;
+        case 'ArrowRight':
+            velocity += 1;
+            console.log(`Velocity is changed to ${velocity}`);
+            break;
+        case 'ArrowLeft':
+            velocity -= 1;
+            console.log(`Velocity is changed to ${velocity}`);
             break;
         default:
             console.log(`Key ${event.key} pressed`);
     }
+    console.log(`Key ${event.key} pressed`);
 }
