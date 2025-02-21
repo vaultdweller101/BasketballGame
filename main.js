@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 // import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 // import { GLTFLoader } from "three/examples/jsm/Addons.js";
+import {createHalfCourtFloor} from './halfcourt.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -12,6 +13,17 @@ document.body.appendChild(renderer.domElement);
 // texturing used for hoop
 const textureLoader = new THREE.TextureLoader();
 
+//making the sky
+const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+const skyMaterial = new THREE.MeshBasicMaterial({
+    //using a picture from google
+  map: new THREE.TextureLoader().load('./photos/sky.jpg'),
+  side: THREE.BackSide
+});
+//adding the sky to the scene
+const skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
+scene.add(skyDome);
+
 // Lighting
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
@@ -20,12 +32,17 @@ spotLight.position.set(0, 10, 0);
 scene.add(spotLight);
 
 // Floor (Court)
-const floorGeometry = new THREE.PlaneGeometry(20, 10);
-const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xd2691e });
-const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = -Math.PI / 2;
+// Load the texture
+const floor = createHalfCourtFloor('./photos/halfcourt.jpg'); // Ensure correct path
 scene.add(floor);
 
+//now I will add more land to make it look like a basketball court at a park
+const landGeometry = new THREE.PlaneGeometry(60,60,1000,1000);
+const landMaterial = new THREE.MeshStandardMaterial({ color: 0x7CFC00,flatShading: false});
+const land = new THREE.Mesh(landGeometry, landMaterial);
+land.rotation.x = -Math.PI / 2;
+land.position.y = -0.1;
+scene.add(land);
 // Backboard
 
 // Load the backboard texture
