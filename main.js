@@ -9,6 +9,28 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+const clock = new THREE.Clock();
+
+// Crosshair
+const crosshairGeometry = new THREE.CircleGeometry(0.001, 32);
+const crosshairMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // green
+const crosshair = new THREE.Mesh(crosshairGeometry, crosshairMaterial);
+crosshair.position.set(0, 0, -0.1);
+camera.add(crosshair);
+
+// Black charging bar background
+const chargingBarBackgroundGeometry = new THREE.PlaneGeometry(0.1, 0.01);
+const chargingBarBackgroundMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }); // black
+const chargingBarBackground = new THREE.Mesh(chargingBarBackgroundGeometry, chargingBarBackgroundMaterial);
+chargingBarBackground.position.set(0, -0.05, -0.1);
+camera.add(chargingBarBackground);
+
+// Charging bar to indicate how much power the player is using to shoot the ball
+const chargingBarGeometry = new THREE.PlaneGeometry(0.1, 0.01);
+const chargingBarMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); 
+const chargingBar = new THREE.Mesh(chargingBarGeometry, chargingBarMaterial);
+chargingBar.position.set(0, -0.05, -0.1);
+camera.add(chargingBar);
 
 // texturing used for hoop
 const textureLoader = new THREE.TextureLoader();
@@ -122,6 +144,8 @@ const speed = 0.1;
 const balls = [];
 const speed_constant = 0.05;
 const acceleration_constant = 0.0001;
+let multiplier = 1;
+
 function shootBall() {
     const ballGeometry = new THREE.SphereGeometry(0.2, 16, 16);
     const ballMaterial = new THREE.MeshStandardMaterial({ color: 0xffa500 });
@@ -132,11 +156,29 @@ function shootBall() {
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
     
-    balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant) });
+    balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant * multiplier) });
 }
 
+// Charging
+let animation_time = 0;
+let delta_animation_time = 0;
+const T = 2;
+
+function charge_ball(){
+    requestAnimationFrame(charge_ball);
+    delta_animation_time = clock.getDelta();
+    animation_time += delta_animation_time;
+    let adjustment_factor = Math.sin((2 * Math.PI / T) * animation_time)
+    chargingBar.scale.x = (0.5 + 0.5 * adjustment_factor);
+    // Multiplier range from 0 to 2
+    multiplier = adjustment_factor + 1;
+}
+
+// First space: Start charging
+// Second space: Stop charging and shoot
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {
+        charge_ball();
         shootBall();
     }
 });
@@ -172,6 +214,7 @@ function ballSimulation(ballObj){
             // the ball goes in the rim
             ballObj.velocity.x = 0;
             ballObj.velocity.z = 0;
+            console.log("Score!");
         }
         // Otherwise, the ball hits the rim and bounce away
         // apply bounce
