@@ -141,14 +141,46 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+// Specify backboard normals for collision detection for front and side
+const backboardNormals = new THREE.Vector3(0, 0, 1);
+
 // Ball physics
 function ballSimulation(ballObj){
+    // Check if the ball hit the ground
     if (ballObj.mesh.position.y - land.position.y <= 0.4){
         // apply bounce
         ballObj.velocity.y = Math.abs(ballObj.velocity.y);
         // the bounce absorb some energy, thus decrease the velocity
-        ballObj.velocity.multiplyScalar(0.5);
+        ballObj.velocity.multiplyScalar(0.7);
     }
+    // Check if the ball hit the backboard
+    else if (Math.abs(ballObj.mesh.position.z - backboard.position.z) <= 0.3 && Math.abs(ballObj.mesh.position.x - backboard.position.x) <= 1.3
+    && Math.abs(ballObj.mesh.position.y - backboard.position.y) <= 0.8){
+        // compute angle between ballObj velocity and backboard normal
+        const angle = ballObj.velocity.angleTo(backboardNormals);
+        ballObj.velocity.applyAxisAngle(backboardNormals, angle);
+        // // apply bounce
+        ballObj.velocity.z *= -1;
+        ballObj.velocity.x *= -1;
+    }
+    // Check if the ball hit the rim
+    else if (Math.sqrt((ballObj.mesh.position.z - rim.position.z) ** 2 + (ballObj.mesh.position.x - rim.position.x) ** 2) <= 0.3 
+    && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.3){
+        // Check if the ball goes in the rim (Only when the ball velocity's y component is negative
+        // and the ball's x and z position is exactly the same as the rim's)
+        if (ballObj.velocity.y < 0 && Math.abs(ballObj.mesh.position.x - rim.position.x) <= 0.2 && Math.abs(ballObj.mesh.position.z - rim.position.z) <= 0.2){
+            // the ball goes in the rim
+            ballObj.velocity.x = 0;
+            ballObj.velocity.z = 0;
+        }
+        // Otherwise, the ball hits the rim and bounce away
+        // apply bounce
+        else{
+            ballObj.velocity.z *= -1;
+            ballObj.velocity.x *= -1;
+        }
+    }
+    // Apply air resistance and gravity
     else{
         // apply gravity
         ballObj.velocity.y -= acceleration_constant * 0.98; 
