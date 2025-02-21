@@ -120,6 +120,8 @@ const speed = 0.1;
 
 // Ball shooting
 const balls = [];
+const speed_constant = 0.05;
+const acceleration_constant = 0.0001;
 function shootBall() {
     const ballGeometry = new THREE.SphereGeometry(0.2, 16, 16);
     const ballMaterial = new THREE.MeshStandardMaterial({ color: 0xffa500 });
@@ -130,7 +132,7 @@ function shootBall() {
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
     
-    balls.push({ mesh: ball, velocity: direction.multiplyScalar(0.5) });
+    balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant) });
 }
 
 document.addEventListener('keydown', (event) => {
@@ -138,6 +140,23 @@ document.addEventListener('keydown', (event) => {
         shootBall();
     }
 });
+
+// Ball physics
+function ballSimulation(ballObj){
+    if (ballObj.mesh.position.y - land.position.y <= 0.4){
+        // apply bounce
+        ballObj.velocity.y = Math.abs(ballObj.velocity.y);
+        // the bounce absorb some energy, thus decrease the velocity
+        ballObj.velocity.multiplyScalar(0.5);
+    }
+    else{
+        // apply gravity
+        ballObj.velocity.y -= acceleration_constant * 0.98; 
+        // apply air resistance
+        ballObj.velocity.multiplyScalar(0.9999);
+    }
+    ballObj.mesh.position.add(ballObj.velocity);
+}
 
 function animate() {
     requestAnimationFrame(animate);
@@ -147,7 +166,7 @@ function animate() {
     if (keys['KeyD']) controls.moveRight(speed);
     
     balls.forEach((ballObj) => {
-        ballObj.mesh.position.add(ballObj.velocity);
+        ballSimulation(ballObj);
     });
     
     renderer.render(scene, camera);
