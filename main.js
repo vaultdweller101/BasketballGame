@@ -220,7 +220,7 @@ function shootBall() {
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
     
-    balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant * multiplier) });
+    balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant * multiplier), score: 0 });
 }
 
 // Charging
@@ -234,8 +234,8 @@ function charge_ball(){
     animation_time += delta_animation_time;
     let adjustment_factor = Math.sin((2 * Math.PI / T) * animation_time)
     chargingBar.scale.x = (0.5 + 0.5 * adjustment_factor);
-    // Multiplier range from 0 to 2
-    multiplier = adjustment_factor + 1;
+    // Multiplier range from 0 to 1.5
+    multiplier = (adjustment_factor + 1) * 0.75;
 }
 
 // First space: Start charging
@@ -304,6 +304,7 @@ let innerRimBS = new THREE.Sphere(rimBS.center, 0.28);
 innerRimBS.center.copy(rim.position);
 
 let angle;
+let ballToRim = new THREE.Vector3();;
 
 // Ball physics
 function ballSimulation(ballObj){
@@ -311,7 +312,7 @@ function ballSimulation(ballObj){
     ballBS.center.copy(ballObj.mesh.position);
 
     // Check if the ball hit the ground
-    if (ballObj.mesh.position.y - land.position.y <= 0.15){
+    if (ballObj.mesh.position.y - land.position.y <= 0.2){
         // apply bounce
         ballObj.velocity.y = Math.abs(ballObj.velocity.y);
         // the bounce absorb some energy, thus decrease the velocity
@@ -319,7 +320,7 @@ function ballSimulation(ballObj){
     }
     // Check if the ball hit the backboard
     else if (backboardBB.intersectsSphere(ballBS) || baseBB.intersectsSphere(ballBS) || poleBB.intersectsSphere(ballBS)){
-        // compute angle between ballObj velocity and backboard normal
+        // compute angle between ballObj velocity and normal
         angle = ballObj.velocity.angleTo(backboardNormals);
         ballObj.velocity.applyAxisAngle(backboardNormals, -angle);
         // // apply bounce
@@ -328,7 +329,7 @@ function ballSimulation(ballObj){
     }
     // Check if the ball hit the support
     else if ( supportBB.intersectsSphere(ballBS) ){
-        // compute angle between ballObj velocity and backboard normal
+        // compute angle between ballObj velocity and normal
         angle = ballObj.velocity.angleTo(supportNormals);
         ballObj.velocity.applyAxisAngle(supportNormals, -angle);
         // // apply bounce
@@ -337,13 +338,18 @@ function ballSimulation(ballObj){
     }
     // Check if the ball hit the rim
     else if (rimBS.intersectsSphere(ballBS) && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.17){
+        ballToRim.subVectors(ballObj.mesh.position, rim.position).normalize();
         // Check if the ball goes in the rim (Only when the ball velocity's y component is negative
         // and the ball's x and z position is exactly the same as the rim's)
-        if (innerRimBS.intersectsSphere(ballBS) && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.015
-        && ballObj.velocity.y < 0 ){
+        if (innerRimBS.intersectsSphere(ballBS) && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.018
+        && ballObj.velocity.y < 0 && ballObj.score == 0){
+            ballObj.score = 1;
             console.log("Score!");
             updateScore();
         }
+        // Compute angle between ballObj velocity and rim normal
+        angle = ballObj.velocity.angleTo(ballToRim);
+        ballObj.velocity.applyAxisAngle(ballToRim, -angle);
         // apply bounce
         ballObj.velocity.z *= -1;
         ballObj.velocity.x *= -1;
