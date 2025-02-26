@@ -3,14 +3,44 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 // import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 // import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import {createHalfCourtFloor} from './halfcourt.js';
+//this is for the sky 
+import { Sky } from 'three/examples/jsm/objects/Sky.js';
 
+const sky = new Sky();
+sky.scale.setScalar(450000);
+
+
+// Sky parameters
+const skyUniforms = sky.material.uniforms;
+skyUniforms['turbidity'].value = 5; // Lower = less hazy
+skyUniforms['rayleigh'].value = 0.33; // Less blue scattering
+skyUniforms['mieCoefficient'].value = 0.001; // Softer light scattering
+skyUniforms['mieDirectionalG'].value = 0.7; // Reduce direct light glow
+
+
+// Sun position for MIDDAY 
+const sun = new THREE.Vector3();
+const phi = THREE.MathUtils.degToRad(90 - 85); // Higher value = closer to overhead (90 is directly above)
+const theta = THREE.MathUtils.degToRad(180); // Sun from the south
+sun.setFromSphericalCoords(1, phi, theta);
+skyUniforms['sunPosition'].value.copy(sun);
+
+// Optional: Add a directional light to simulate sunlight
+const sunlight = new THREE.DirectionalLight(0xffffff, 1.5);
+sunlight.position.copy(sun).multiplyScalar(10000); // Place the light far away
+
+
+
+//end of sky
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 const clock = new THREE.Clock();
-
+//adding sky to scene
+scene.add(sky);
+scene.add(sunlight);
 // Crosshair
 const crosshairGeometry = new THREE.CircleGeometry(0.001, 32);
 const crosshairMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // green
@@ -36,15 +66,15 @@ camera.add(chargingBar);
 const textureLoader = new THREE.TextureLoader();
 
 //making the sky
-const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
-const skyMaterial = new THREE.MeshBasicMaterial({
-    //using a picture from google
-  map: new THREE.TextureLoader().load('./photos/sky.jpg'),
-  side: THREE.BackSide
-});
-//adding the sky to the scene
-const skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
-scene.add(skyDome);
+// const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+// const skyMaterial = new THREE.MeshBasicMaterial({
+//     //using a picture from google
+//   map: new THREE.TextureLoader().load('./photos/sky.jpg'),
+//   side: THREE.BackSide
+// });
+// //adding the sky to the scene
+// const skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
+// scene.add(skyDome);
 
 // Lighting
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -59,12 +89,44 @@ const floor = createHalfCourtFloor('./photos/halfcourt.jpg'); // Ensure correct 
 scene.add(floor);
 
 //now I will add more land to make it look like a basketball court at a park
-const landGeometry = new THREE.PlaneGeometry(60,60,1000,1000);
-const landMaterial = new THREE.MeshStandardMaterial({ color: 0x7CFC00,flatShading: false});
+// const landGeometry = new THREE.PlaneGeometry(60,60,1000,1000);
+// const landMaterial = new THREE.MeshStandardMaterial({ color: 0x7CFC00,flatShading: false});
+// const land = new THREE.Mesh(landGeometry, landMaterial);
+// land.rotation.x = -Math.PI / 2;
+// land.position.y = -0.1;
+// scene.add(land);
+const landGeometry = new THREE.PlaneGeometry(60, 60, 200, 200); // Increase segments for better shader effect
+
+const landMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        uTime: { value: 0 }, // To animate if needed
+    },
+    vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vPosition;
+        void main() {
+            vUv = uv;
+            vPosition = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        varying vec2 vUv;
+        varying vec3 vPosition;
+
+        void main() {
+            float brightness = 0.5 + 0.5 * sin(vPosition.x * 0.2) * cos(vPosition.y * 0.2);
+            vec3 grassColor = mix(vec3(0.1, 0.3, 0.1), vec3(0.2, 0.6, 0.2), brightness);
+            gl_FragColor = vec4(grassColor, 1.0);
+        }
+    `,
+});
+
 const land = new THREE.Mesh(landGeometry, landMaterial);
 land.rotation.x = -Math.PI / 2;
 land.position.y = -0.1;
 scene.add(land);
+
 
 // support for the hoop
 
