@@ -147,9 +147,11 @@ const acceleration_constant = 0.0001;
 let multiplier = 1;
 
 function shootBall() {
-    const ballGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+    const ballGeometry = new THREE.SphereGeometry(0.15, 16, 16);
     const ballMaterial = new THREE.MeshStandardMaterial({ color: 0xffa500 });
     const ball = new THREE.Mesh(ballGeometry, ballMaterial);
+    ball.geometry.computeBoundingSphere();
+    ball.frustumCulled = false;
     scene.add(ball);
     
     ball.position.copy(camera.position);
@@ -162,7 +164,7 @@ function shootBall() {
 // Charging
 let animation_time = 0;
 let delta_animation_time = 0;
-const T = 2;
+const T = 4;
 
 function charge_ball(){
     requestAnimationFrame(charge_ball);
@@ -183,45 +185,106 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+// Score Display
+const scoreDisplay = document.createElement('div');
+scoreDisplay.style.position = 'absolute';
+scoreDisplay.style.top = '20px';
+scoreDisplay.style.left = '50%';
+scoreDisplay.style.transform = 'translateX(-50%)';
+scoreDisplay.style.fontSize = '24px';
+scoreDisplay.style.color = 'white';
+scoreDisplay.style.fontFamily = 'Arial, sans-serif';
+scoreDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+scoreDisplay.style.padding = '10px 20px';
+scoreDisplay.style.borderRadius = '10px';
+scoreDisplay.innerHTML = 'Score: 0';
+document.body.appendChild(scoreDisplay);
+
+let score = 0; // Score counter
+
+function updateScore() {
+    score++;
+    scoreDisplay.innerHTML = `Score: ${score}`;
+}
+
 // Specify backboard normals for collision detection for front and side
 const backboardNormals = new THREE.Vector3(0, 0, 1);
+const supportNormals = new THREE.Vector3(0,-0.5, Math.sqrt(3)/2);
+
+// Compute Bounding Box and Sphere
+// Backboard
+let backboardBB = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+backboardBB.setFromObject(backboard);
+
+// Base
+let baseBB = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+baseBB.setFromObject(base);
+
+// Support
+let supportBB = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+supportBB.setFromObject(support);
+
+// Pole
+let poleBB = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+poleBB.setFromObject(pole);
+
+// Ball
+let ballBS;
+
+// Rim
+rim.geometry.computeBoundingSphere();
+let rimBS = rim.geometry.boundingSphere;
+rimBS.center.copy(rim.position);
+rim.frustumCulled = false;
+
+// Inner Rim
+let innerRimBS = new THREE.Sphere(rimBS.center, 0.28);
+innerRimBS.center.copy(rim.position);
+
+let angle;
 
 // Ball physics
 function ballSimulation(ballObj){
+    ballBS = ballObj.mesh.geometry.boundingSphere;
+    ballBS.center.copy(ballObj.mesh.position);
+
     // Check if the ball hit the ground
-    if (ballObj.mesh.position.y - land.position.y <= 0.4){
+    if (ballObj.mesh.position.y - land.position.y <= 0.15){
         // apply bounce
         ballObj.velocity.y = Math.abs(ballObj.velocity.y);
         // the bounce absorb some energy, thus decrease the velocity
         ballObj.velocity.multiplyScalar(0.7);
     }
     // Check if the ball hit the backboard
-    else if (Math.abs(ballObj.mesh.position.z - backboard.position.z) <= 0.3 && Math.abs(ballObj.mesh.position.x - backboard.position.x) <= 1.3
-    && Math.abs(ballObj.mesh.position.y - backboard.position.y) <= 0.8){
+    else if (backboardBB.intersectsSphere(ballBS) || baseBB.intersectsSphere(ballBS) || poleBB.intersectsSphere(ballBS)){
         // compute angle between ballObj velocity and backboard normal
-        const angle = ballObj.velocity.angleTo(backboardNormals);
-        ballObj.velocity.applyAxisAngle(backboardNormals, angle);
+        angle = ballObj.velocity.angleTo(backboardNormals);
+        ballObj.velocity.applyAxisAngle(backboardNormals, -angle);
+        // // apply bounce
+        ballObj.velocity.z *= -1;
+        ballObj.velocity.x *= -1;
+    }
+    // Check if the ball hit the support
+    else if ( supportBB.intersectsSphere(ballBS) ){
+        // compute angle between ballObj velocity and backboard normal
+        angle = ballObj.velocity.angleTo(supportNormals);
+        ballObj.velocity.applyAxisAngle(supportNormals, -angle);
         // // apply bounce
         ballObj.velocity.z *= -1;
         ballObj.velocity.x *= -1;
     }
     // Check if the ball hit the rim
-    else if (Math.sqrt((ballObj.mesh.position.z - rim.position.z) ** 2 + (ballObj.mesh.position.x - rim.position.x) ** 2) <= 0.3 
-    && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.3){
+    else if (rimBS.intersectsSphere(ballBS) && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.17){
         // Check if the ball goes in the rim (Only when the ball velocity's y component is negative
         // and the ball's x and z position is exactly the same as the rim's)
-        if (ballObj.velocity.y < 0 && Math.abs(ballObj.mesh.position.x - rim.position.x) <= 0.2 && Math.abs(ballObj.mesh.position.z - rim.position.z) <= 0.2){
-            // the ball goes in the rim
-            ballObj.velocity.x = 0;
-            ballObj.velocity.z = 0;
+        if (innerRimBS.intersectsSphere(ballBS) && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.015
+        && ballObj.velocity.y < 0 ){
             console.log("Score!");
+            updateScore();
         }
-        // Otherwise, the ball hits the rim and bounce away
         // apply bounce
-        else{
-            ballObj.velocity.z *= -1;
-            ballObj.velocity.x *= -1;
-        }
+        ballObj.velocity.z *= -1;
+        ballObj.velocity.x *= -1;
     }
     // Apply air resistance and gravity
     else{
