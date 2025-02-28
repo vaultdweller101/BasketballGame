@@ -220,7 +220,7 @@ function shootBall() {
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
     
-    balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant * multiplier), score: 0 });
+    balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant * multiplier), score: 0, from: ball.position });
 }
 
 // Charging
@@ -264,8 +264,8 @@ document.body.appendChild(scoreDisplay);
 
 let score = 0; // Score counter
 
-function updateScore() {
-    score++;
+function updateScore(scorePerShot) {
+    score += scorePerShot;
     scoreDisplay.innerHTML = `Score: ${score}`;
 }
 
@@ -304,7 +304,8 @@ let innerRimBS = new THREE.Sphere(rimBS.center, 0.28);
 innerRimBS.center.copy(rim.position);
 
 let angle;
-let ballToRim = new THREE.Vector3();;
+let ballToRim = new THREE.Vector3();
+let scorePerShot = 0;
 
 // Ball physics
 function ballSimulation(ballObj){
@@ -341,11 +342,17 @@ function ballSimulation(ballObj){
         ballToRim.subVectors(ballObj.mesh.position, rim.position).normalize();
         // Check if the ball goes in the rim (Only when the ball velocity's y component is negative
         // and the ball's x and z position is exactly the same as the rim's)
-        if (innerRimBS.intersectsSphere(ballBS) && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.018
+        if (innerRimBS.intersectsSphere(ballBS) && ballObj.mesh.position.y - rim.position.y <= -0.05
         && ballObj.velocity.y < 0 && ballObj.score == 0){
             ballObj.score = 1;
             console.log("Score!");
-            updateScore();
+            if (ballObj.from.distanceTo(rim.position) >= 7){
+                scorePerShot = 3;
+            }
+            else{
+                scorePerShot = 2;
+            }
+            updateScore(scorePerShot);
         }
         // Compute angle between ballObj velocity and rim normal
         angle = ballObj.velocity.angleTo(ballToRim);
@@ -376,6 +383,7 @@ function animate() {
     });
     
     renderer.render(scene, camera);
+    // console.log(camera.position.distanceTo(rim.position));
 }
 
 camera.position.set(0, 1.5, 5);
