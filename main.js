@@ -200,7 +200,7 @@ scene.add(controls.getObject());
 const keys = {};
 document.addEventListener('keydown', (event) => (keys[event.code] = true));
 document.addEventListener('keyup', (event) => (keys[event.code] = false));
-const speed = 0.1;
+const speed = 0.05;
 
 // Ball shooting
 const balls = [];
@@ -263,10 +263,24 @@ scoreDisplay.innerHTML = 'Score: 0';
 document.body.appendChild(scoreDisplay);
 
 let score = 0; // Score counter
+let score_percentage = 0; // Percentage counter
+let shotGoesIn = 0;
+let rating = 'Poor';
 
-function updateScore(scorePerShot) {
+function updateScore(scorePerShot, amountofBalls) {
     score += scorePerShot;
-    scoreDisplay.innerHTML = `Score: ${score}`;
+    shotGoesIn += 1;
+    score_percentage = shotGoesIn/amountofBalls;
+    if (score_percentage > 2/3){
+        rating = 'Great!';
+    }
+    else if (score_percentage > 1/2){
+        rating = 'Average';
+    }
+    else{
+        rating = 'Poor';
+    }
+    scoreDisplay.innerHTML = `Score: ${score} Rating: ${rating}`;
 }
 
 // Specify backboard normals for collision detection for front and side
@@ -352,7 +366,7 @@ function ballSimulation(ballObj){
             else{
                 scorePerShot = 2;
             }
-            updateScore(scorePerShot);
+            updateScore(scorePerShot, balls.length);
         }
         // Compute angle between ballObj velocity and rim normal
         angle = ballObj.velocity.angleTo(ballToRim);
@@ -383,7 +397,7 @@ function animate() {
     });
     
     renderer.render(scene, camera);
-    // console.log(camera.position.distanceTo(rim.position));
+    console.log(camera.position.distanceTo(rim.position));
 }
 
 camera.position.set(0, 1.5, 5);
