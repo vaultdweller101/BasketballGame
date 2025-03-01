@@ -10,24 +10,28 @@ const sky = new Sky();
 sky.scale.setScalar(450000);
 
 
-// Sky parameters
+// Sky parameters Now night-time
 const skyUniforms = sky.material.uniforms;
 skyUniforms['turbidity'].value = 5; // Lower = less hazy
-skyUniforms['rayleigh'].value = 0.33; // Less blue scattering
-skyUniforms['mieCoefficient'].value = 0.001; // Softer light scattering
+skyUniforms['rayleigh'].value = 100; // Less blue scattering
+skyUniforms['mieCoefficient'].value = 0.01; // Softer light scattering
 skyUniforms['mieDirectionalG'].value = 0.7; // Reduce direct light glow
 
 
-// Sun position for MIDDAY 
+// Sun position for MIDDAY -> WILL NOW BE AT THE HORIZON
 const sun = new THREE.Vector3();
-const phi = THREE.MathUtils.degToRad(90 - 85); // Higher value = closer to overhead (90 is directly above)
+const phi = THREE.MathUtils.degToRad(120); // Higher value = closer to overhead (90 is directly above)
 const theta = THREE.MathUtils.degToRad(180); // Sun from the south
 sun.setFromSphericalCoords(1, phi, theta);
 skyUniforms['sunPosition'].value.copy(sun);
 
 // Optional: Add a directional light to simulate sunlight
-const sunlight = new THREE.DirectionalLight(0xffffff, 1.5);
-sunlight.position.copy(sun).multiplyScalar(10000); // Place the light far away
+// const sunlight = new THREE.DirectionalLight(0xffffff, 1.5);
+//sunlight.position.copy(sun).multiplyScalar(10000); // Place the light far away
+//now will be moonlight
+const moonlight = new THREE.DirectionalLight(0x8899ff, 0.3);
+moonlight.position.set(-1000,1000,-1000);
+
 
 
 
@@ -40,7 +44,8 @@ document.body.appendChild(renderer.domElement);
 const clock = new THREE.Clock();
 //adding sky to scene
 scene.add(sky);
-scene.add(sunlight);
+//scene.add(sunlight);
+scene.add(moonlight);
 // Crosshair
 const crosshairGeometry = new THREE.CircleGeometry(0.001, 32);
 const crosshairMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // green
