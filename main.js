@@ -417,6 +417,32 @@ let angle;
 let ballToRim = new THREE.Vector3();
 let scorePerShot = 0;
 
+// Wind vector
+let angleX;
+let angleY;
+let angleZ;
+const wind_constant = 0.00005;
+let wind = new THREE.Vector3(1, 0, 0);
+wind = wind.multiplyScalar(wind_constant);
+
+function randomizeWind() {
+    // Generate random rotation angles in radians
+    angleX = (Math.random() - 0.5) * Math.PI * 0.1; // Small random rotations
+    angleY = (Math.random() - 0.5) * Math.PI * 0.1;
+    angleZ = (Math.random() - 0.5) * Math.PI * 0.1;
+
+    // Create rotation matrices
+    const rotationMatrixX = new THREE.Matrix4().makeRotationX(angleX);
+    const rotationMatrixY = new THREE.Matrix4().makeRotationY(angleY);
+    const rotationMatrixZ = new THREE.Matrix4().makeRotationZ(angleZ);
+
+    // Apply rotations to the wind vector
+    wind.applyMatrix4(rotationMatrixX);
+    wind.applyMatrix4(rotationMatrixY);
+    wind.applyMatrix4(rotationMatrixZ);
+
+}
+
 // Ball physics
 function ballSimulation(ballObj){
     ballBS = ballObj.mesh.geometry.boundingSphere;
@@ -478,6 +504,9 @@ function ballSimulation(ballObj){
         // apply air resistance
         ballObj.velocity.multiplyScalar(0.9999);
     }
+    // Apply wind
+    ballObj.velocity.add(wind);
+
     ballObj.mesh.position.add(ballObj.velocity);
 }
 
@@ -488,12 +517,15 @@ function animate() {
     if (keys['KeyA']) controls.moveRight(-speed);
     if (keys['KeyD']) controls.moveRight(speed);
     
+    setInterval(randomizeWind, 3000); 
+
     balls.forEach((ballObj) => {
         ballSimulation(ballObj);
     });
     
     renderer.render(scene, camera);
-    console.log(camera.position.distanceTo(rim.position));
+    // console.log(camera.position.distanceTo(rim.position));
+    // console.log(wind);
 }
 
 camera.position.set(0, 1.5, 5);
