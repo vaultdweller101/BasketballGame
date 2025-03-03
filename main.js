@@ -147,6 +147,8 @@ function setNightMode()
     stars.visible=true;
 }
 const clock = new THREE.Clock();
+// This clock is used only for the charging bar in order to not messed up the animation
+const clock2 = new THREE.Clock();
 
 // Crosshair
 const crosshairGeometry = new THREE.CircleGeometry(0.001, 32);
@@ -307,7 +309,8 @@ function shootBall() {
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
     
-    balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant * multiplier), score: 0, from: ball.position });
+    balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant * multiplier), 
+        score: 0, from: ball.position, collision_immune: false, collision_time: 0 });
 }
 
 // Charging
@@ -317,7 +320,7 @@ const T = 4;
 
 function charge_ball(){
     requestAnimationFrame(charge_ball);
-    delta_animation_time = clock.getDelta();
+    delta_animation_time = clock2.getDelta();
     animation_time += delta_animation_time;
     let adjustment_factor = Math.sin((2 * Math.PI / T) * animation_time)
     chargingBar.scale.x = (0.5 + 0.5 * adjustment_factor);
@@ -457,45 +460,57 @@ function ballSimulation(ballObj){
     }
     // Check if the ball hit the backboard
     else if (backboardBB.intersectsSphere(ballBS) || baseBB.intersectsSphere(ballBS) || poleBB.intersectsSphere(ballBS)){
-        // compute angle between ballObj velocity and normal
-        angle = ballObj.velocity.angleTo(backboardNormals);
-        ballObj.velocity.applyAxisAngle(backboardNormals, -angle);
-        // // apply bounce
-        ballObj.velocity.z *= -1;
-        ballObj.velocity.x *= -1;
+        if (ballObj.collision_immune == false){
+            // compute angle between ballObj velocity and normal
+            angle = ballObj.velocity.angleTo(backboardNormals);
+            ballObj.velocity.applyAxisAngle(backboardNormals, -angle);
+            // // apply bounce
+            ballObj.velocity.multiplyScalar(-0.6);
+            // collision immune
+            ballObj.collision_immune = true;
+            ballObj.collision_time = clock.getElapsedTime();
+        }
     }
     // Check if the ball hit the support
     else if ( supportBB.intersectsSphere(ballBS) ){
-        // compute angle between ballObj velocity and normal
-        angle = ballObj.velocity.angleTo(supportNormals);
-        ballObj.velocity.applyAxisAngle(supportNormals, -angle);
-        // // apply bounce
-        ballObj.velocity.z *= -1;
-        ballObj.velocity.x *= -1;
+        if (ballObj.collision_immune == false){
+            // compute angle between ballObj velocity and normal
+            angle = ballObj.velocity.angleTo(supportNormals);
+            ballObj.velocity.applyAxisAngle(supportNormals, -angle);
+            // // apply bounce
+            ballObj.velocity.multiplyScalar(-0.3);
+            // collision immune
+            ballObj.collision_immune = true;
+            ballObj.collision_time = clock.getElapsedTime();
+        }
     }
     // Check if the ball hit the rim
     else if (rimBS.intersectsSphere(ballBS) && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.17){
-        ballToRim.subVectors(ballObj.mesh.position, rim.position).normalize();
-        // Check if the ball goes in the rim (Only when the ball velocity's y component is negative
-        // and the ball's x and z position is exactly the same as the rim's)
-        if (innerRimBS.intersectsSphere(ballBS) && ballObj.mesh.position.y - rim.position.y <= -0.05
-        && ballObj.velocity.y < 0 && ballObj.score == 0){
-            ballObj.score = 1;
-            console.log("Score!");
-            if (ballObj.from.distanceTo(rim.position) >= 7){
-                scorePerShot = 3;
+        if (ballObj.collision_immune == false){
+            ballToRim.subVectors(ballObj.mesh.position, rim.position).normalize();
+            // Check if the ball goes in the rim (Only when the ball velocity's y component is negative
+            // and the ball's x and z position is exactly the same as the rim's)
+            if (innerRimBS.intersectsSphere(ballBS) && ballObj.mesh.position.y - rim.position.y <= -0.05
+            && ballObj.velocity.y < 0 && ballObj.score == 0){
+                ballObj.score = 1;
+                console.log("Score!");
+                if (ballObj.from.distanceTo(rim.position) >= 7){
+                    scorePerShot = 3;
+                }
+                else{
+                    scorePerShot = 2;
+                }
+                updateScore(scorePerShot, balls.length);
             }
-            else{
-                scorePerShot = 2;
-            }
-            updateScore(scorePerShot, balls.length);
+            // Compute angle between ballObj velocity and rim normal
+            angle = ballObj.velocity.angleTo(ballToRim);
+            ballObj.velocity.applyAxisAngle(ballToRim, -angle);
+            // apply bounce
+            ballObj.velocity.multiplyScalar(-0.4);
+            // collision immune
+            ballObj.collision_immune = true;
+            ballObj.collision_time = clock.getElapsedTime();
         }
-        // Compute angle between ballObj velocity and rim normal
-        angle = ballObj.velocity.angleTo(ballToRim);
-        ballObj.velocity.applyAxisAngle(ballToRim, -angle);
-        // apply bounce
-        ballObj.velocity.z *= -1;
-        ballObj.velocity.x *= -1;
     }
     // Apply air resistance and gravity
     else{
@@ -510,6 +525,7 @@ function ballSimulation(ballObj){
     ballObj.mesh.position.add(ballObj.velocity);
 }
 
+let current_time;
 function animate() {
     requestAnimationFrame(animate);
     if (keys['KeyW']) controls.moveForward(speed);
@@ -517,9 +533,15 @@ function animate() {
     if (keys['KeyA']) controls.moveRight(-speed);
     if (keys['KeyD']) controls.moveRight(speed);
     
+    // Every 3 seconds
     setInterval(randomizeWind, 3000); 
+    current_time = clock.getElapsedTime();
 
     balls.forEach((ballObj) => {
+        // Modify immunity frame status
+        if (current_time - ballObj.collision_time > 100){
+            ballObj.collision_immune = false
+        }
         ballSimulation(ballObj);
     });
     
