@@ -6,7 +6,7 @@ import {createHalfCourtFloor} from './halfcourt.js';
 //this is for the sky 
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { mx_fractal_noise_float } from 'three/src/nodes/TSL.js';
-
+import loadBasketballCourt from './court/basketballCourt.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -181,8 +181,8 @@ scene.add(spotLight);
 
 // Floor (Court)
 // Load the texture
-const floor = createHalfCourtFloor('./photos/halfcourt.jpg'); // Ensure correct path
-scene.add(floor);
+// const floor = createHalfCourtFloor('./photos/halfcourt.jpg'); // Ensure correct path
+// scene.add(floor);
 
 const landGeometry = new THREE.PlaneGeometry(60, 60, 200, 200); // Increase segments for better shader effect
 
@@ -214,8 +214,10 @@ const landMaterial = new THREE.ShaderMaterial({
 const land = new THREE.Mesh(landGeometry, landMaterial);
 land.rotation.x = -Math.PI / 2;
 land.position.y = -0.1;
+// land.position.z = 7.5;
 scene.add(land);
 
+loadBasketballCourt(scene, renderer);
 
 // support for the hoop
 
@@ -289,7 +291,7 @@ scene.add(controls.getObject());
 const keys = {};
 document.addEventListener('keydown', (event) => (keys[event.code] = true));
 document.addEventListener('keyup', (event) => (keys[event.code] = false));
-const speed = 0.05;
+const speed = .05;
 
 // Ball shooting
 const balls = [];
