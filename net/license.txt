@@ -1,0 +1,11 @@
+Model Information:
+* title:	Basketball Net
+* source:	https://sketchfab.com/3d-models/basketball-net-a30b888f83a14d6181f1e936326a676e
+* author:	fadesir (https://sketchfab.com/fadesir)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Basketball Net" (https://sketchfab.com/3d-models/basketball-net-a30b888f83a14d6181f1e936326a676e) by fadesir (https://sketchfab.com/fadesir) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
