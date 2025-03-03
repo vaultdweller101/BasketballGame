@@ -5,47 +5,149 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 import {createHalfCourtFloor} from './halfcourt.js';
 //this is for the sky 
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
-
-const sky = new Sky();
-sky.scale.setScalar(450000);
+import { mx_fractal_noise_float } from 'three/src/nodes/TSL.js';
 
 
-// Sky parameters Now night-time
-const skyUniforms = sky.material.uniforms;
-skyUniforms['turbidity'].value = 5; // Lower = less hazy
-skyUniforms['rayleigh'].value = 100; // Less blue scattering
-skyUniforms['mieCoefficient'].value = 0.01; // Softer light scattering
-skyUniforms['mieDirectionalG'].value = 0.7; // Reduce direct light glow
-
-
-// Sun position for MIDDAY -> WILL NOW BE AT THE HORIZON
-const sun = new THREE.Vector3();
-const phi = THREE.MathUtils.degToRad(120); // Higher value = closer to overhead (90 is directly above)
-const theta = THREE.MathUtils.degToRad(180); // Sun from the south
-sun.setFromSphericalCoords(1, phi, theta);
-skyUniforms['sunPosition'].value.copy(sun);
-
-// Optional: Add a directional light to simulate sunlight
-// const sunlight = new THREE.DirectionalLight(0xffffff, 1.5);
-//sunlight.position.copy(sun).multiplyScalar(10000); // Place the light far away
-//now will be moonlight
-const moonlight = new THREE.DirectionalLight(0x8899ff, 0.3);
-moonlight.position.set(-1000,1000,-1000);
-
-
-
-
-//end of sky
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-const clock = new THREE.Clock();
+
+const sky = new Sky();
+sky.scale.setScalar(450000);
+const skyUniforms = sky.material.uniforms;
 //adding sky to scene
 scene.add(sky);
-//scene.add(sunlight);
+
+//I want to make it so that when I press a key, I toggle from night time to day time 
+//the flag we will use to determine white one to display
+
+//lighting 
+let isNight = false;
+let ambientLight = new THREE.AmbientLight(0xffffff,0.5);
+scene.add(ambientLight);
+
+
+//now the sun 
+let sun = new THREE.Vector3();
+
+let sunlight = new THREE.DirectionalLight(0xffffff,1.5);
+sunlight.position.set(100,200,100);
+scene.add(sunlight);
+
+//adding a sun 
+const sunMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(5, 32, 32), // Large sphere for the sun
+    new THREE.MeshBasicMaterial({ color: 0xffd700 }) // Glowing yellow sun
+);
+sunMesh.position.set(100, 200, 100); // Positioning the sun
+scene.add(sunMesh);
+//adding a moon
+const moonMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(5, 32, 32), // Large sphere for the moon
+    new THREE.MeshBasicMaterial({ color: 0xffffff }) // Grayish moon
+);
+moonMesh.position.set(-100, 200, -100); // Positioning the moon
+scene.add(moonMesh); 
+
+//giving the moon lighting
+let moonlight = new THREE.DirectionalLight(0xffffff,0.5);
+moonlight.position.set(-100,200,-100);
 scene.add(moonlight);
+
+function addStars()
+{
+    //creating the star geometry 
+    const starGeaometry=new THREE.BufferGeometry();
+    //a list of all of the star locations which we will create randomly 
+    const starVertices = [];
+
+    //creating 1000 stars 
+    for(let i =0;i<1000;i++)
+    {
+        //random xyz coordinates
+        const x=(Math.random()-0.5)*2000;
+        const y=Math.random()*500+100;
+        const z = (Math.random()-0.5)*2000;
+        starVertices.push(x,y,z);
+    }
+
+    starGeaometry.setAttribute('position',new THREE.Float32BufferAttribute(starVertices,3));
+    const starMaterial = new THREE.PointsMaterial({color:0xffffff});
+
+    const starMesh=new THREE.Points(starGeaometry,starMaterial);
+    starMesh.visible=false;
+    scene.add(starMesh);
+    return starMesh;
+}
+
+const stars=addStars();
+//fucntion to set up daytime settings
+function setDayMode() {
+    isNight=false;
+
+    //daytime color 
+    scene.background =new THREE.Color(0x87CEEB);
+    
+    skyUniforms['turbidity'].value = 0.0001; // Lower = less hazy
+    skyUniforms['rayleigh'].value = 0.1; // Less blue scattering
+    skyUniforms['mieCoefficient'].value = 100; // Softer light scattering
+    skyUniforms['mieDirectionalG'].value = .005; // Reduce direct light glow
+
+    
+    const phi = THREE.MathUtils.degToRad(5); 
+    const theta = THREE.MathUtils.degToRad(180); 
+    sun.setFromSphericalCoords(1, phi, theta);
+    skyUniforms['sunPosition'].value.copy(sun);
+
+    //lighiting 
+    ambientLight.color.set(0xffffff);
+    ambientLight.intensity=0.5;
+
+    //hiding the moon
+    moonlight.intensity=0;
+    sunlight.intensity=1.5;
+
+    sunMesh.visible=true;
+    moonMesh.visible=false;
+
+    //we will hid the stars we have for the night 
+    stars.visible = false;
+
+    
+}
+
+//now for when we want it to me night time 
+function setNightMode()
+{
+    isNight=true;
+    scene.remove(sky);
+    //now we change the sky color
+    scene.background=new THREE.Color(0x0b0c1e);
+    //change sky uniforms for night time 
+    skyUniforms['turbidity'].value = 2;
+    skyUniforms['rayleigh'].value = 0.2;
+    skyUniforms['mieCoefficient'].value = 0.005;
+    skyUniforms['mieDirectionalG'].value = 0.8;
+    //changing the sun location
+    const phi = THREE.MathUtils.degToRad(120);
+    const theta = THREE.MathUtils.degToRad(180);
+    sun.setFromSphericalCoords(1, phi, theta);
+    skyUniforms['sunPosition'].value.copy(sun);
+    //change the lighting 
+    ambientLight.color.set(0x202040);
+    ambientLight.intensity = 0.2;
+
+    sunlight.intensity = 0.0;
+    moonlight.intensity = 1.5; 
+    sunMesh.visible=false;
+    moonMesh.visible=true;
+    //now we want to show the stars 
+    stars.visible=true;
+}
+const clock = new THREE.Clock();
+
 // Crosshair
 const crosshairGeometry = new THREE.CircleGeometry(0.001, 32);
 const crosshairMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // green
@@ -70,20 +172,7 @@ camera.add(chargingBar);
 // texturing used for hoop
 const textureLoader = new THREE.TextureLoader();
 
-//making the sky
-// const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
-// const skyMaterial = new THREE.MeshBasicMaterial({
-//     //using a picture from google
-//   map: new THREE.TextureLoader().load('./photos/sky.jpg'),
-//   side: THREE.BackSide
-// });
-// //adding the sky to the scene
-// const skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
-// scene.add(skyDome);
-
 // Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambientLight);
 const spotLight = new THREE.SpotLight(0xffffff, 1.5, 50, Math.PI / 4, 0.5);
 spotLight.position.set(0, 10, 0);
 scene.add(spotLight);
@@ -93,13 +182,6 @@ scene.add(spotLight);
 const floor = createHalfCourtFloor('./photos/halfcourt.jpg'); // Ensure correct path
 scene.add(floor);
 
-//now I will add more land to make it look like a basketball court at a park
-// const landGeometry = new THREE.PlaneGeometry(60,60,1000,1000);
-// const landMaterial = new THREE.MeshStandardMaterial({ color: 0x7CFC00,flatShading: false});
-// const land = new THREE.Mesh(landGeometry, landMaterial);
-// land.rotation.x = -Math.PI / 2;
-// land.position.y = -0.1;
-// scene.add(land);
 const landGeometry = new THREE.PlaneGeometry(60, 60, 200, 200); // Increase segments for better shader effect
 
 const landMaterial = new THREE.ShaderMaterial({
@@ -250,7 +332,16 @@ document.addEventListener('keydown', (event) => {
         charge_ball();
         shootBall();
     }
+    if (event.code === 'KeyT') { 
+        if (isNight) {
+            setDayMode();
+        } else {
+            setNightMode();
+        }
+    }
 });
+
+setDayMode();
 
 // Score Display
 const scoreDisplay = document.createElement('div');
