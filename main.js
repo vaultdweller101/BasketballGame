@@ -420,6 +420,8 @@ innerRimBS.center.copy(rim.position);
 
 let angle;
 let ballToRim = new THREE.Vector3();
+let ballToCenter = new THREE.Vector3();
+let centerToRim = new THREE.Vector3();
 let scorePerShot = 0;
 
 // Wind vector
@@ -478,6 +480,7 @@ function ballSimulation(ballObj, delta){
             // collision immune
             ballObj.collision_immune = true;
             ballObj.collision_time = clock.getElapsedTime();
+            console.log("Hit bb");
         }
     }
     // Check if the ball hit the support
@@ -496,7 +499,15 @@ function ballSimulation(ballObj, delta){
     // Check if the ball hit the rim
     else if (rimBS.intersectsSphere(ballBS) && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.17){
         if (ballObj.collision_immune == false){
-            ballToRim.subVectors(ballObj.mesh.position, rim.position).normalize();
+
+            ballToCenter.subVectors(rim.position, ballObj.mesh.position);
+            centerToRim.x = ballToCenter.x;
+            centerToRim.z = ballToCenter.z;
+            centerToRim.y = 0;
+            centerToRim.normalize().multiplyScalar(0.3);
+            ballToRim.addVectors(ballToCenter, centerToRim).normalize();
+            ballToRim.y *= -1;
+
             // Check if the ball goes in the rim (Only when the ball velocity's y component is negative
             // and the ball's x and z position is exactly the same as the rim's)
             if (innerRimBS.intersectsSphere(ballBS) && ballObj.mesh.position.y - rim.position.y <= -0.05
@@ -511,14 +522,7 @@ function ballSimulation(ballObj, delta){
                 }
                 updateScore(scorePerShot, balls.length);
             }
-            // Compute angle between ballObj velocity and rim normal
-            angle = ballObj.velocity.angleTo(ballToRim);
-            ballObj.velocity.applyAxisAngle(ballToRim, -angle);
-            // apply bounce
-            ballObj.velocity.multiplyScalar(-0.4);
-            // collision immune
-            ballObj.collision_immune = true;
-            ballObj.collision_time = clock.getElapsedTime();
+            ballObj.velocity.reflect(ballToRim);
         }
     }
     // Apply air resistance and gravity
@@ -554,7 +558,9 @@ function animate() {
 
     balls.forEach((ballObj) => {
         // Modify immunity frame status
-        if (current_time - ballObj.collision_time > 100){
+        // Too small a duration -> Ball stuck
+        // Too long a duration -> Ball phase through obj
+        if (current_time - ballObj.collision_time > 0.1 * fps * delta){
             ballObj.collision_immune = false
         }
         ballSimulation(ballObj, delta);
