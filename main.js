@@ -149,6 +149,8 @@ function setNightMode()
 const clock = new THREE.Clock();
 // This clock is used only for the charging bar in order to not messed up the animation
 const clock2 = new THREE.Clock();
+// This clock is used only for ballSimulation
+const clock3 = new THREE.Clock();
 
 // Crosshair
 const crosshairGeometry = new THREE.CircleGeometry(0.001, 32);
@@ -428,7 +430,7 @@ const wind_constant = 0.00005;
 let wind = new THREE.Vector3(1, 0, 0);
 wind = wind.multiplyScalar(wind_constant);
 
-function randomizeWind(wind) {
+function randomizeWind() {
     // Generate random rotation angles in radians
     angleX = (Math.random() - 0.5) * Math.PI * 0.1; // Small random rotations
     angleY = (Math.random() - 0.5) * Math.PI * 0.1;
@@ -447,10 +449,14 @@ function randomizeWind(wind) {
 }
 
 // Ball physics
+let delta_animation_time2 = 0;
+let animation_time2 = 0;
 let final_velocity;
 let fps = 240;
 
 function ballSimulation(ballObj, delta){
+    delta_animation_time2 = clock3.getDelta();
+    animation_time2 += delta_animation_time2;
     ballBS = ballObj.mesh.geometry.boundingSphere;
     ballBS.center.copy(ballObj.mesh.position);
 
@@ -535,7 +541,7 @@ function ballSimulation(ballObj, delta){
 let current_time;
 function animate() {
     requestAnimationFrame(animate);
-    let delta = clock.getDelta();
+    let delta = clock3.getDelta();
     let final_speed = speed * delta * fps;
     if (keys['KeyW']) controls.moveForward(final_speed);
     if (keys['KeyS']) controls.moveForward(-final_speed);
