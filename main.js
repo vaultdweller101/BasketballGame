@@ -7,6 +7,7 @@ import {createHalfCourtFloor} from './halfcourt.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { mx_fractal_noise_float } from 'three/src/nodes/TSL.js';
 import loadBasketballCourt from './court/basketballCourt.js';
+import {updateScore} from './score.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -348,41 +349,7 @@ document.addEventListener('keydown', (event) => {
 
 setDayMode();
 
-// Score Display
-const scoreDisplay = document.createElement('div');
-scoreDisplay.style.position = 'absolute';
-scoreDisplay.style.top = '20px';
-scoreDisplay.style.left = '50%';
-scoreDisplay.style.transform = 'translateX(-50%)';
-scoreDisplay.style.fontSize = '24px';
-scoreDisplay.style.color = 'white';
-scoreDisplay.style.fontFamily = 'Arial, sans-serif';
-scoreDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-scoreDisplay.style.padding = '10px 20px';
-scoreDisplay.style.borderRadius = '10px';
-scoreDisplay.innerHTML = 'Score: 0';
-document.body.appendChild(scoreDisplay);
 
-let score = 0; // Score counter
-let score_percentage = 0; // Percentage counter
-let shotGoesIn = 0;
-let rating = 'Poor';
-
-function updateScore(scorePerShot, amountofBalls) {
-    score += scorePerShot;
-    shotGoesIn += 1;
-    score_percentage = shotGoesIn/amountofBalls;
-    if (score_percentage > 2/3){
-        rating = 'Great!';
-    }
-    else if (score_percentage > 1/2){
-        rating = 'Average';
-    }
-    else{
-        rating = 'Poor';
-    }
-    scoreDisplay.innerHTML = `Score: ${score} Rating: ${rating}`;
-}
 
 // Specify backboard normals for collision detection for front and side
 const backboardNormals = new THREE.Vector3(0, 0, 1);
@@ -447,18 +414,13 @@ function randomizeWind() {
     wind.applyMatrix4(rotationMatrixX);
     wind.applyMatrix4(rotationMatrixY);
     wind.applyMatrix4(rotationMatrixZ);
-
 }
 
 // Ball physics
-let delta_animation_time2 = 0;
-let animation_time2 = 0;
-let final_velocity;
+let final_velocity = new THREE.Vector3(0,0,0);
 let fps = 240;
 
 function ballSimulation(ballObj, delta){
-    delta_animation_time2 = clock3.getDelta();
-    animation_time2 += delta_animation_time2;
     ballBS = ballObj.mesh.geometry.boundingSphere;
     ballBS.center.copy(ballObj.mesh.position);
 
@@ -501,12 +463,10 @@ function ballSimulation(ballObj, delta){
         if (ballObj.collision_immune == false){
 
             ballToCenter.subVectors(rim.position, ballObj.mesh.position);
-            centerToRim.x = ballToCenter.x;
-            centerToRim.z = ballToCenter.z;
-            centerToRim.y = 0;
+            centerToRim.set(ballToCenter.x, 0, ballToCenter.z);
             centerToRim.normalize().multiplyScalar(0.3);
             ballToRim.addVectors(ballToCenter, centerToRim).normalize();
-            ballToRim.y *= -1;
+            ballToRim.y = - Math.abs(ballToRim.y);
 
             // Check if the ball goes in the rim (Only when the ball velocity's y component is negative
             // and the ball's x and z position is exactly the same as the rim's)
@@ -535,9 +495,8 @@ function ballSimulation(ballObj, delta){
     // Apply wind
     ballObj.velocity.add(wind);
 
-    final_velocity = ballObj.velocity.clone();
+    final_velocity.set(ballObj.velocity.x, ballObj.velocity.y, ballObj.velocity.z);
     final_velocity.multiplyScalar(delta * fps);
-    // ballObj.mesh.position.add(ballObj.velocity);
     ballObj.mesh.position.add(final_velocity);
     
 }
@@ -567,8 +526,6 @@ function animate() {
     });
     
     renderer.render(scene, camera);
-    // console.log(camera.position.distanceTo(rim.position));
-    // console.log(wind);
 }
 
 camera.position.set(0, 1.5, 5);
