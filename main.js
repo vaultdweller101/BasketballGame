@@ -310,12 +310,12 @@ function shootBall() {
     ball.frustumCulled = false;
     scene.add(ball);
     
-    ball.position.copy(camera.position);
+    ball.position.copy(camera.position);    
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
     
     balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant * multiplier), 
-        score: 0, from: ball.position, collision_immune: false, collision_time: 0 });
+        score: false, from: ball.position, collision_immune: false, collision_time: 0 });
 }
 
 // Charging
@@ -460,19 +460,17 @@ function ballSimulation(ballObj, delta){
     }
     // Check if the ball hit the rim
     else if (rimBS.intersectsSphere(ballBS) && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.17){
-        if (ballObj.collision_immune == false){
+        // if (ballObj.collision_immune == false){
 
             ballToCenter.subVectors(rim.position, ballObj.mesh.position);
             centerToRim.set(ballToCenter.x, 0, ballToCenter.z);
             centerToRim.normalize().multiplyScalar(0.3);
             ballToRim.addVectors(ballToCenter, centerToRim).normalize();
-            ballToRim.y = - Math.abs(ballToRim.y);
 
             // Check if the ball goes in the rim (Only when the ball velocity's y component is negative
             // and the ball's x and z position is exactly the same as the rim's)
-            if (innerRimBS.intersectsSphere(ballBS) && ballObj.mesh.position.y - rim.position.y <= -0.05
-            && ballObj.velocity.y < 0 && ballObj.score == 0){
-                ballObj.score = 1;
+            if ( innerRimBS.containsPoint(ballObj.mesh.position) && ballObj.velocity.y < 0 && ballObj.score == false){
+                ballObj.score = true;
                 console.log("Score!");
                 if (ballObj.from.distanceTo(rim.position) >= 7){
                     scorePerShot = 3;
@@ -483,7 +481,7 @@ function ballSimulation(ballObj, delta){
                 updateScore(scorePerShot, balls.length);
             }
             ballObj.velocity.reflect(ballToRim);
-        }
+        // }
     }
     // Apply air resistance and gravity
     else{
