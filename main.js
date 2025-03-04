@@ -149,6 +149,8 @@ function setNightMode()
 const clock = new THREE.Clock();
 // This clock is used only for the charging bar in order to not messed up the animation
 const clock2 = new THREE.Clock();
+// This clock is used only for ballSimulation
+const clock3 = new THREE.Clock();
 
 // Crosshair
 const crosshairGeometry = new THREE.CircleGeometry(0.001, 32);
@@ -326,12 +328,10 @@ function charge_ball(){
     animation_time += delta_animation_time;
     let adjustment_factor = Math.sin((2 * Math.PI / T) * animation_time)
     chargingBar.scale.x = (0.5 + 0.5 * adjustment_factor);
-    // Multiplier range from 0 to 1.5
-    multiplier = (adjustment_factor + 1) * 0.75;
+    // Multiplier range from 0 to 2
+    multiplier = (adjustment_factor + 1);
 }
 
-// First space: Start charging
-// Second space: Stop charging and shoot
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {
         charge_ball();
@@ -449,12 +449,19 @@ function randomizeWind() {
 }
 
 // Ball physics
-function ballSimulation(ballObj){
+let delta_animation_time2 = 0;
+let animation_time2 = 0;
+let final_velocity;
+let fps = 240;
+
+function ballSimulation(ballObj, delta){
+    delta_animation_time2 = clock3.getDelta();
+    animation_time2 += delta_animation_time2;
     ballBS = ballObj.mesh.geometry.boundingSphere;
     ballBS.center.copy(ballObj.mesh.position);
 
     // Check if the ball hit the ground
-    if (ballObj.mesh.position.y - land.position.y <= 0.2){
+    if (ballObj.mesh.position.y - land.position.y <= 0.3){
         // apply bounce
         ballObj.velocity.y = Math.abs(ballObj.velocity.y);
         // the bounce absorb some energy, thus decrease the velocity
@@ -467,7 +474,7 @@ function ballSimulation(ballObj){
             angle = ballObj.velocity.angleTo(backboardNormals);
             ballObj.velocity.applyAxisAngle(backboardNormals, -angle);
             // // apply bounce
-            ballObj.velocity.multiplyScalar(-0.6);
+            ballObj.velocity.multiplyScalar(-0.4);
             // collision immune
             ballObj.collision_immune = true;
             ballObj.collision_time = clock.getElapsedTime();
@@ -517,23 +524,29 @@ function ballSimulation(ballObj){
     // Apply air resistance and gravity
     else{
         // apply gravity
-        ballObj.velocity.y -= acceleration_constant * 0.98; 
+        ballObj.velocity.y -= acceleration_constant * 0.98 * delta * fps; 
         // apply air resistance
         ballObj.velocity.multiplyScalar(0.9999);
     }
     // Apply wind
     ballObj.velocity.add(wind);
 
-    ballObj.mesh.position.add(ballObj.velocity);
+    final_velocity = ballObj.velocity.clone();
+    final_velocity.multiplyScalar(delta * fps);
+    // ballObj.mesh.position.add(ballObj.velocity);
+    ballObj.mesh.position.add(final_velocity);
+    
 }
 
 let current_time;
 function animate() {
     requestAnimationFrame(animate);
-    if (keys['KeyW']) controls.moveForward(speed);
-    if (keys['KeyS']) controls.moveForward(-speed);
-    if (keys['KeyA']) controls.moveRight(-speed);
-    if (keys['KeyD']) controls.moveRight(speed);
+    let delta = clock3.getDelta();
+    let final_speed = speed * delta * fps;
+    if (keys['KeyW']) controls.moveForward(final_speed);
+    if (keys['KeyS']) controls.moveForward(-final_speed);
+    if (keys['KeyA']) controls.moveRight(-final_speed);
+    if (keys['KeyD']) controls.moveRight(final_speed);
     
     // Every 3 seconds
     setInterval(randomizeWind, 3000); 
@@ -544,7 +557,7 @@ function animate() {
         if (current_time - ballObj.collision_time > 100){
             ballObj.collision_immune = false
         }
-        ballSimulation(ballObj);
+        ballSimulation(ballObj, delta);
     });
     
     renderer.render(scene, camera);
