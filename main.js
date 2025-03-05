@@ -349,7 +349,36 @@ document.addEventListener('keydown', (event) => {
 
 setDayMode();
 
+// Deconstruct rim into a bunch of spheres
+const spheres = [];
+// rim.visible = false;
 
+function create_spheres(num){
+    let center = rim.position.clone();
+    let alpha = 0;
+    let d_alpha = 2 * Math.PI / num;
+    // sin(alpha) + cos(alpha)
+    for (let i = 0; i < num; i ++){
+        alpha += d_alpha;
+        center.x = rim.position.x + 0.3 * Math.sin(alpha);
+        center.z = rim.position.z + 0.3 * Math.cos(alpha);
+        let sphereBB = new THREE.Sphere(center.clone(), 0.02);
+        spheres.push(sphereBB);
+    }
+    console.log("Done adding collision spheres for rim");
+}
+
+create_spheres(50);
+
+function check_collision_against_spheres(ballBB){
+    for (let i = 0; i < spheres.length; i++){
+        if (ballBB.intersectsSphere(spheres[i])){
+            // console.log(i);
+            return i;
+        }
+    }
+    return -1;
+}
 
 // Specify backboard normals for collision detection for front and side
 const backboardNormals = new THREE.Vector3(0, 0, 1);
@@ -375,20 +404,11 @@ poleBB.setFromObject(pole);
 // Ball
 let ballBS;
 
-// Rim
-rim.geometry.computeBoundingSphere();
-let rimBS = rim.geometry.boundingSphere;
-rimBS.center.copy(rim.position);
-rim.frustumCulled = false;
-
-// Inner Rim
-let innerRimBS = new THREE.Sphere(rimBS.center, 0.28);
-innerRimBS.center.copy(rim.position);
+// ScoreBS
+let scoreBS = new THREE.Sphere(rim.position, 0.13);
 
 let angle;
 let ballToRim = new THREE.Vector3();
-let ballToCenter = new THREE.Vector3();
-let centerToRim = new THREE.Vector3();
 let scorePerShot = 0;
 
 // Wind vector
@@ -419,10 +439,13 @@ function randomizeWind() {
 // Ball physics
 let final_velocity = new THREE.Vector3(0,0,0);
 let fps = 240;
+let which_sphere;
 
 function ballSimulation(ballObj, delta){
     ballBS = ballObj.mesh.geometry.boundingSphere;
     ballBS.center.copy(ballObj.mesh.position);
+    
+    which_sphere = check_collision_against_spheres(ballBS);
 
     // Check if the ball hit the ground
     if (ballObj.mesh.position.y - land.position.y <= 0.3){
@@ -459,30 +482,11 @@ function ballSimulation(ballObj, delta){
         }
     }
     // Check if the ball hit the rim
-    else if (rimBS.intersectsSphere(ballBS) && Math.abs(ballObj.mesh.position.y - rim.position.y) <= 0.17){
-        // if (ballObj.collision_immune == false){
-
-            ballToCenter.subVectors(rim.position, ballObj.mesh.position);
-            centerToRim.set(ballToCenter.x, 0, ballToCenter.z);
-            centerToRim.normalize().multiplyScalar(0.3);
-            ballToRim.addVectors(ballToCenter, centerToRim).normalize();
-
-            // Check if the ball goes in the rim (Only when the ball velocity's y component is negative
-            // and the ball's x and z position is exactly the same as the rim's)
-            if ( innerRimBS.containsPoint(ballObj.mesh.position) && ballObj.velocity.y < 0 && ballObj.score == false){
-                ballObj.score = true;
-                console.log("Score!");
-                if (ballObj.from.distanceTo(rim.position) >= 7){
-                    scorePerShot = 3;
-                }
-                else{
-                    scorePerShot = 2;
-                }
-                updateScore(scorePerShot, balls.length);
-            }
-            ballObj.velocity.reflect(ballToRim);
-        // }
+    else if (which_sphere != -1){
+        ballToRim.subVectors(spheres[which_sphere].center, ballObj.mesh.position).normalize();
+        ballObj.velocity.reflect(ballToRim);
     }
+
     // Apply air resistance and gravity
     else{
         // apply gravity
@@ -490,6 +494,20 @@ function ballSimulation(ballObj, delta){
         // apply air resistance
         ballObj.velocity.multiplyScalar(0.9999);
     }
+
+    // Scoring
+    if ( scoreBS.containsPoint(ballObj.mesh.position) && ballObj.velocity.y < 0 && ballObj.score == false){
+        ballObj.score = true;
+        console.log("Score!");
+        if (ballObj.from.distanceTo(rim.position) >= 7){
+            scorePerShot = 3;
+        }
+        else{
+            scorePerShot = 2;
+        }
+        updateScore(scorePerShot, balls.length);
+    }
+
     // Apply wind
     ballObj.velocity.add(wind);
 
