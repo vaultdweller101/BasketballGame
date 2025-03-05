@@ -147,6 +147,7 @@ function setNightMode()
     //now we want to show the stars 
     stars.visible=true;
 }
+// This clock is used only to get setElapsedTime without triggering the delta time from the other clock, which is time between frames
 const clock = new THREE.Clock();
 // This clock is used only for the charging bar in order to not messed up the animation
 const clock2 = new THREE.Clock();
@@ -294,12 +295,11 @@ scene.add(controls.getObject());
 const keys = {};
 document.addEventListener('keydown', (event) => (keys[event.code] = true));
 document.addEventListener('keyup', (event) => (keys[event.code] = false));
-const speed = .05;
+// Running speed: 10 m/s
+const speed = 10;
 
 // Ball shooting
 const balls = [];
-const speed_constant = 0.05;
-const acceleration_constant = 0.0001;
 let multiplier = 1;
 
 function shootBall() {
@@ -313,8 +313,8 @@ function shootBall() {
     ball.position.copy(camera.position);    
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
-    
-    balls.push({ mesh: ball, velocity: direction.multiplyScalar(speed_constant * multiplier), 
+    // default ball speed is 10 m/s
+    balls.push({ mesh: ball, velocity: direction.multiplyScalar(10 * multiplier), 
         score: false, from: ball.position, collision_immune: false, collision_time: 0 });
 }
 
@@ -373,7 +373,6 @@ create_spheres(50);
 function check_collision_against_spheres(ballBB){
     for (let i = 0; i < spheres.length; i++){
         if (ballBB.intersectsSphere(spheres[i])){
-            // console.log(i);
             return i;
         }
     }
@@ -438,7 +437,6 @@ function randomizeWind() {
 
 // Ball physics
 let final_velocity = new THREE.Vector3(0,0,0);
-let fps = 240;
 let which_sphere;
 
 function ballSimulation(ballObj, delta){
@@ -490,7 +488,7 @@ function ballSimulation(ballObj, delta){
     // Apply air resistance and gravity
     else{
         // apply gravity
-        ballObj.velocity.y -= acceleration_constant * 0.98 * delta * fps; 
+        ballObj.velocity.y -=  9.8 * delta; 
         // apply air resistance
         ballObj.velocity.multiplyScalar(0.9999);
     }
@@ -512,7 +510,7 @@ function ballSimulation(ballObj, delta){
     ballObj.velocity.add(wind);
 
     final_velocity.set(ballObj.velocity.x, ballObj.velocity.y, ballObj.velocity.z);
-    final_velocity.multiplyScalar(delta * fps);
+    final_velocity.multiplyScalar(delta);
     ballObj.mesh.position.add(final_velocity);
     
 }
@@ -521,7 +519,7 @@ let current_time;
 function animate() {
     requestAnimationFrame(animate);
     let delta = clock3.getDelta();
-    let final_speed = speed * delta * fps;
+    let final_speed = speed * delta;
     if (keys['KeyW']) controls.moveForward(final_speed);
     if (keys['KeyS']) controls.moveForward(-final_speed);
     if (keys['KeyA']) controls.moveRight(-final_speed);
@@ -535,7 +533,7 @@ function animate() {
         // Modify immunity frame status
         // Too small a duration -> Ball stuck
         // Too long a duration -> Ball phase through obj
-        if (current_time - ballObj.collision_time > 0.1 * fps * delta){
+        if (current_time - ballObj.collision_time > 10 * delta){
             ballObj.collision_immune = false
         }
         ballSimulation(ballObj, delta);
