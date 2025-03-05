@@ -415,14 +415,17 @@ let angleX;
 let angleY;
 let angleZ;
 
-// Wind speed set to 3 m/s
-let wind = new THREE.Vector3(3, 0, 0);
+// Wind speed set to 1 m/s
+let wind = new THREE.Vector3(1, 0, 0);
 
 function randomizeWind() {
+    // Reset wind vector
+    wind.set(1, 0, 0);
+
     // Generate random rotation angles in radians
-    angleX = (Math.random() - 0.5) * Math.PI * 0.1; // Small random rotations
-    angleY = (Math.random() - 0.5) * Math.PI * 0.1;
-    angleZ = (Math.random() - 0.5) * Math.PI * 0.1;
+    angleX = Math.random() * Math.PI * 2; 
+    angleY = Math.random() * Math.PI * 2;
+    angleZ = Math.random() * Math.PI * 2;
 
     // Create rotation matrices
     const rotationMatrixX = new THREE.Matrix4().makeRotationX(angleX);
@@ -433,6 +436,9 @@ function randomizeWind() {
     wind.applyMatrix4(rotationMatrixX);
     wind.applyMatrix4(rotationMatrixY);
     wind.applyMatrix4(rotationMatrixZ);
+
+    // Random wind magnitude according to this reference: https://www.weather.gov/pqr/wind, Calm to Moderate Breeze
+    wind.multiplyScalar(Math.random() * 8);
 }
 
 // Ball physics
@@ -500,7 +506,7 @@ function ballSimulation(ballObj, delta){
     if ( scoreBS.containsPoint(ballObj.mesh.position) && ballObj.velocity.y < 0 && ballObj.score == false){
         ballObj.score = true;
         console.log("Score!");
-        if (ballObj.from.distanceTo(rim.position) >= 7){
+        if (ballObj.from.distanceTo(rim.position) >= 2.2){
             scorePerShot = 3;
         }
         else{
@@ -528,9 +534,8 @@ function ballSimulation(ballObj, delta){
         ballObj.velocity.add(lift_acceleration.multiplyScalar(delta));
 
         // Calculate drag
-        // Drag's direction is opposite of velocity
-        drag_acceleration.set(ballObj.velocity.x, ballObj.velocity.y, ballObj.velocity.z);
-        drag_acceleration.multiplyScalar(-1).normalize();
+        // Drag's direction is that of opposite of air flow
+        drag_acceleration.set(flow.x, flow.y, flow.z).multiplyScalar(-1).normalize();
         // // F = 1/2 * 1.3 * ball_velocity * ball_velocity * pi * radius * radius * 0.5
         drag_acceleration.multiplyScalar(1/2 * 1.3 * ballObj.velocity.length() * ballObj.velocity.length() * Math.PI * 0.15 * 0.15 * 0.5);
         // // a = F/m
@@ -542,6 +547,8 @@ function ballSimulation(ballObj, delta){
     final_velocity.set(ballObj.velocity.x, ballObj.velocity.y, ballObj.velocity.z);
     final_velocity.multiplyScalar(delta);
     ballObj.mesh.position.add(final_velocity);
+
+    // console.log(ballObj.from.distanceTo(rim.position));
 }
 
 let current_time;
@@ -554,8 +561,8 @@ function animate() {
     if (keys['KeyA']) controls.moveRight(-final_speed);
     if (keys['KeyD']) controls.moveRight(final_speed);
     
-    // Every 3 seconds
-    setInterval(randomizeWind, 3000); 
+    // Every 1 seconds
+    setInterval(randomizeWind, 1000); 
     current_time = clock.getElapsedTime();
 
     balls.forEach((ballObj) => {
