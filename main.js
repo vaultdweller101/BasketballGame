@@ -414,9 +414,9 @@ let scorePerShot = 0;
 let angleX;
 let angleY;
 let angleZ;
-const wind_constant = 0.00005;
-let wind = new THREE.Vector3(1, 0, 0);
-wind = wind.multiplyScalar(wind_constant);
+
+// Wind speed set to 3 m/s
+let wind = new THREE.Vector3(3, 0, 0);
 
 function randomizeWind() {
     // Generate random rotation angles in radians
@@ -438,6 +438,17 @@ function randomizeWind() {
 // Ball physics
 let final_velocity = new THREE.Vector3(0,0,0);
 let which_sphere;
+// mass of basketball: 600 g = 0.6 kg
+const mass = 0.6;
+let drag_acceleration = new THREE.Vector3(0,0,0);
+let lift_acceleration = new THREE.Vector3(0,0,0);
+let flow = new THREE.Vector3(0,0,0);
+// set angular velocity to 6 rad/s
+let angular_velocity = 6;
+// Hard code spin axis to only be around horizontal axis
+let spinAxis = new THREE.Vector3(0, 0, 0);
+// Velocity projection on xz plane
+let projection = new THREE.Vector3(0,0,0);
 
 function ballSimulation(ballObj, delta){
     ballBS = ballObj.mesh.geometry.boundingSphere;
@@ -463,7 +474,6 @@ function ballSimulation(ballObj, delta){
             // collision immune
             ballObj.collision_immune = true;
             ballObj.collision_time = clock.getElapsedTime();
-            console.log("Hit bb");
         }
     }
     // Check if the ball hit the support
@@ -485,13 +495,6 @@ function ballSimulation(ballObj, delta){
         ballObj.velocity.reflect(ballToRim);
     }
 
-    // Apply air resistance and gravity
-    else{
-        // apply gravity
-        ballObj.velocity.y -=  9.8 * delta; 
-        // apply air resistance
-        ballObj.velocity.multiplyScalar(0.9999);
-    }
 
     // Scoring
     if ( scoreBS.containsPoint(ballObj.mesh.position) && ballObj.velocity.y < 0 && ballObj.score == false){
@@ -506,13 +509,39 @@ function ballSimulation(ballObj, delta){
         updateScore(scorePerShot, balls.length);
     }
 
-    // Apply wind
-    ballObj.velocity.add(wind);
+    // apply gravity, lift and drag only while on air
+    if (ballObj.mesh.position.y - land.position.y > 0.3){
+        ballObj.velocity.y -=  9.8 * delta; 
 
+        // Calculate lift: https://www.grc.nasa.gov/www/k-12/VirtualAero/BottleRocket/airplane/beach.html
+        // Find flow of air
+        flow.subVectors(wind, ballObj.velocity);
+        // axis of rotation would be cross product between velocity and velocity projection on xz plane
+        projection.set(ballObj.velocity.x, 0, ballObj.velocity.z);
+        spinAxis.crossVectors(ballObj.velocity, projection).normalize();
+        // Apply lift, whose normalized vector is a cross product between flow direction and axis of rotation
+        lift_acceleration.crossVectors(spinAxis, flow).normalize();
+        // F = (0.3 * 2 * Math.PI * rotational_velocity * radius * radius * |ball_velocity - wind_velocity|) * (2 * radius) * (pi / 4)
+        lift_acceleration.multiplyScalar(0.3 * 2 * Math.PI * angular_velocity * 0.15 * 0.15 * flow.length() * 2 * 0.15 * Math.PI / 4);
+        // a = F/m
+        lift_acceleration.divideScalar(mass);
+        ballObj.velocity.add(lift_acceleration.multiplyScalar(delta));
+
+        // Calculate drag
+        // Drag's direction is opposite of velocity
+        drag_acceleration.set(ballObj.velocity.x, ballObj.velocity.y, ballObj.velocity.z);
+        drag_acceleration.multiplyScalar(-1).normalize();
+        // // F = 1/2 * 1.3 * ball_velocity * ball_velocity * pi * radius * radius * 0.5
+        drag_acceleration.multiplyScalar(1/2 * 1.3 * ballObj.velocity.length() * ballObj.velocity.length() * Math.PI * 0.15 * 0.15 * 0.5);
+        // // a = F/m
+        drag_acceleration.divideScalar(mass);
+        ballObj.velocity.add(drag_acceleration.multiplyScalar(delta));
+    }
+
+    // Multiply with delta to make sure it's independent of framerate
     final_velocity.set(ballObj.velocity.x, ballObj.velocity.y, ballObj.velocity.z);
     final_velocity.multiplyScalar(delta);
     ballObj.mesh.position.add(final_velocity);
-    
 }
 
 let current_time;
