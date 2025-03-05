@@ -438,7 +438,7 @@ function randomizeWind() {
     wind.applyMatrix4(rotationMatrixZ);
 
     // Random wind magnitude according to this reference: https://www.weather.gov/pqr/wind, Calm to Moderate Breeze
-    wind.multiplyScalar(Math.random() * 8);
+    wind.multiplyScalar(Math.random() * 30);
 }
 
 // Ball physics
@@ -534,10 +534,10 @@ function ballSimulation(ballObj, delta){
         ballObj.velocity.add(lift_acceleration.multiplyScalar(delta));
 
         // Calculate drag
-        // Drag's direction is that of opposite of air flow
-        drag_acceleration.set(flow.x, flow.y, flow.z).multiplyScalar(-1).normalize();
-        // // F = 1/2 * 1.3 * ball_velocity * ball_velocity * pi * radius * radius * 0.5
-        drag_acceleration.multiplyScalar(1/2 * 1.3 * ballObj.velocity.length() * ballObj.velocity.length() * Math.PI * 0.15 * 0.15 * 0.5);
+        // Drag's direction is that of of air flow
+        drag_acceleration.set(flow.x, flow.y, flow.z).normalize();
+        // // F = 1/2 * 1.3 * |ball_velocity - wind_velocity|^2 * pi * radius * radius * 0.5
+        drag_acceleration.multiplyScalar(1/2 * 1.3 * flow.length() * flow.length() * Math.PI * 0.15 * 0.15 * 0.5);
         // // a = F/m
         drag_acceleration.divideScalar(mass);
         ballObj.velocity.add(drag_acceleration.multiplyScalar(delta));
