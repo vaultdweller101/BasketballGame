@@ -9,6 +9,7 @@ import { mx_fractal_noise_float } from 'three/src/nodes/TSL.js';
 import loadBasketballCourt from './court/basketballCourt.js';
 import {updateScore} from './score.js';
 import loadNet from './net/net.js';
+import treeLoad from './tree/tree.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -19,7 +20,7 @@ document.body.appendChild(renderer.domElement);
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap; //trying this to see how smooth 
 
-
+treeLoad(scene,renderer);
 const sky = new Sky();
 sky.scale.setScalar(450000);
 const skyUniforms = sky.material.uniforms;
