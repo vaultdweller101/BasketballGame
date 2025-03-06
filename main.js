@@ -303,13 +303,24 @@ document.addEventListener('keyup', (event) => (keys[event.code] = false));
 // Running speed: 10 m/s
 const speed = 10;
 
+// Create a texture loader
+const textureLoaderBall = new THREE.TextureLoader();
+const basketballTexture = textureLoaderBall.load('ball/ball.png');  // Adjust path if needed
+
 // Ball shooting
 const balls = [];
 let multiplier = 1;
 
 function shootBall() {
-    const ballGeometry = new THREE.SphereGeometry(0.15, 16, 16);
-    const ballMaterial = new THREE.MeshStandardMaterial({ color: 0xffa500 });
+    const ballGeometry = new THREE.SphereGeometry(0.15, 32, 32);
+    
+    // Create a material with the loaded texture
+    const ballMaterial = new THREE.MeshStandardMaterial({
+        map: basketballTexture,          // Apply texture
+        metalness: 0.3,                  // Optional: add metallic look
+        roughness: 0.8                   // Optional: adjust roughness for a realistic look
+    });
+    
     const ball = new THREE.Mesh(ballGeometry, ballMaterial);
     ball.geometry.computeBoundingSphere();
     ball.frustumCulled = false;
