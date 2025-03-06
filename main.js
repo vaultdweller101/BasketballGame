@@ -357,9 +357,11 @@ function shootBall() {
     ball.position.copy(camera.position);    
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
+    //keeping track of when the ball was created
+    const createdAt = clock.getElapsedTime();
     // default ball speed is 10 m/s
     balls.push({ mesh: ball, velocity: direction.multiplyScalar(10 * multiplier), 
-        score: false, from: ball.position, collision_immune: false, collision_time: 0 });
+        score: false, from: ball.position, collision_immune: false, collision_time: 0 ,createdAt: createdAt});
 }
 
 // Charging
@@ -644,7 +646,13 @@ function animate() {
     // Every 1 seconds
     setInterval(randomizeWind, 3000); 
     current_time = clock.getElapsedTime();
-
+    //handling the deletion of the ball
+    for (let i = balls.length - 1; i >= 0; i--) {
+        if (current_time - balls[i].createdAt > 10) {
+            scene.remove(balls[i].mesh);
+            balls.splice(i, 1);
+        }
+    }
     balls.forEach((ballObj) => {
         // Modify immunity frame status
         // Too small a duration -> Ball stuck
