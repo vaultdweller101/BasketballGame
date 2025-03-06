@@ -352,7 +352,7 @@ function shootBall() {
     ball.geometry.computeBoundingSphere();
     ball.frustumCulled = false;
     ball.castShadow=true;
-    scene.add(ball);
+    scene.add(ball); 
     
     ball.position.copy(camera.position);    
     const direction = new THREE.Vector3();
@@ -613,6 +613,14 @@ function ballSimulation(ballObj, delta){
         // // a = F/m
         drag_acceleration.divideScalar(mass);
         ballObj.velocity.add(drag_acceleration.multiplyScalar(delta));
+
+        // Make the ball spin visually
+        if (ballObj.velocity.x > 0){
+            ballObj.mesh.rotation.x += delta * angular_velocity;
+        }
+        else{
+            ballObj.mesh.rotation.x -= delta * angular_velocity;
+        }
     }
 
     // Multiply with delta to make sure it's independent of framerate
