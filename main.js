@@ -405,6 +405,7 @@ function jump() {
     };
 
     jumpLoop();
+    return;
 }
 
 document.addEventListener('keydown', (event) => {
@@ -420,7 +421,7 @@ document.addEventListener('keydown', (event) => {
         }
     }
     if (event.code === 'ShiftLeft') {
-        camera.position.y = 1.6;
+        camera.position.y += 0.2;
         jump();
     }
 });
