@@ -26,7 +26,9 @@ npx vite
 
 You use your mouse to look around and aim the ball. Press space to launch the ball.
 If the ball goes through the hoop, you score points based on how far you are from the hoop, 
-just like real basketball!
+just like real basketball! 
+
+You can also jump by pressing left shift, and move around by pressing AWSD keys.
 
 ## What our game looks like
 

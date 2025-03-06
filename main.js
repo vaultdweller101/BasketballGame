@@ -558,16 +558,14 @@ function ballSimulation(ballObj, delta){
     }
     // Check if the ball hit the support
     else if ( supportBB.intersectsSphere(ballBS) ){
-        if (ballObj.collision_immune == false){
-            // compute angle between ballObj velocity and normal
-            angle = ballObj.velocity.angleTo(supportNormals);
-            ballObj.velocity.applyAxisAngle(supportNormals, -angle);
-            // // apply bounce
-            ballObj.velocity.multiplyScalar(-0.3);
-            // collision immune
-            ballObj.collision_immune = true;
-            ballObj.collision_time = clock.getElapsedTime();
-        }
+        // compute angle between ballObj velocity and normal
+        angle = ballObj.velocity.angleTo(supportNormals);
+        ballObj.velocity.applyAxisAngle(supportNormals, -angle);
+        // // apply bounce
+        ballObj.velocity.multiplyScalar(-1);
+        // collision immune
+        ballObj.collision_immune = true;
+        ballObj.collision_time = clock.getElapsedTime();
     }
     // Check if the ball hit the rim
     else if (which_sphere != -1){
