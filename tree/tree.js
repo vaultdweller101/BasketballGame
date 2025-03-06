@@ -44,20 +44,20 @@ function treeLoad(scene, renderer) {
             scene.add(originalTree);
     
             // Manually clone the tree without a loop
-            const treeClone1 = originalTree.clone(true);
-            treeClone1.position.set(-25, -0.5, 25);
-            treeClone1.scale.set(0.03, 0.03, 0.03);
-            scene.add(treeClone1);
+            // const treeClone1 = originalTree.clone(true);
+            // treeClone1.position.set(-25, -0.5, 25);
+            // treeClone1.scale.set(0.03, 0.03, 0.03);
+            // scene.add(treeClone1);
     
             const treeClone2 = originalTree.clone(true);
             treeClone2.position.set(25, -0.5, -25);
             treeClone2.scale.set(0.03, 0.03, 0.03);
             scene.add(treeClone2);
            
-            const treeClone3 = originalTree.clone(true);
-            treeClone3.position.set(25, -0.5, 25);
-            treeClone3.scale.set(0.03, 0.03, 0.03);
-            scene.add(treeClone3);
+            // const treeClone3 = originalTree.clone(true);
+            // treeClone3.position.set(25, -0.5, 25);
+            // treeClone3.scale.set(0.03, 0.03, 0.03);
+            // scene.add(treeClone3);
     
             // You can continue cloning as many times as you need
             console.log('Tree and clones loaded successfully!');
