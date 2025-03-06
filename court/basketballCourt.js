@@ -54,7 +54,26 @@ function loadBasketballCourt(scene, renderer) {
             court.traverse((child) => {
                 if (child.isMesh) {
                     child.material.clippingPlanes = [clippingPlane];
-                    // child.material.clipShadows = true;  // If you want to clip shadows as well
+                    // Add these two lines:
+                    child.receiveShadow = true;
+                    child.castShadow = true; // Optional, if parts of the court should cast shadows on other parts
+                    
+                    // Make sure the material can receive shadows
+                    if (child.material) {
+                        // If the material is MeshBasicMaterial, replace it
+                        if (child.material.type === 'MeshBasicMaterial') {
+                            const oldMaterial = child.material;
+                            child.material = new THREE.MeshStandardMaterial({
+                                map: oldMaterial.map,
+                                color: oldMaterial.color,
+                                roughness: 0.8,
+                                metalness: 0.1
+                            });
+                        }
+                        
+                        // Enable shadow clipping if you're using clippingPlanes
+                        child.material.clipShadows = true;
+                    }
                 }
             });
 

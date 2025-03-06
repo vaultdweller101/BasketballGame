@@ -14,12 +14,18 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+//making the objects have shadows
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap; //trying this to see how smooth 
+
 
 const sky = new Sky();
 sky.scale.setScalar(450000);
 const skyUniforms = sky.material.uniforms;
 //adding sky to scene
+sky.castShadow=true;
 scene.add(sky);
+
 
 //I want to make it so that when I press a key, I toggle from night time to day time 
 //the flag we will use to determine white one to display
@@ -27,6 +33,7 @@ scene.add(sky);
 //lighting 
 let isNight = false;
 let ambientLight = new THREE.AmbientLight(0xffffff,0.5);
+//ambientLight.castShadow=true;
 scene.add(ambientLight);
 
 
@@ -34,8 +41,20 @@ scene.add(ambientLight);
 let sun = new THREE.Vector3();
 
 let sunlight = new THREE.DirectionalLight(0xffffff,1.5);
-sunlight.position.set(100,200,100);
+sunlight.position.set(50,100,50);
+//making the sunlight cast a shadow
+sunlight.castShadow=true;
+sunlight.shadow.mapSize.width = 4096; // Higher resolution improves shadow quality
+sunlight.shadow.mapSize.height = 4096;
+sunlight.shadow.camera.near = 0.5;
+sunlight.shadow.camera.far = 500;
+sunlight.shadow.camera.left = -50;
+sunlight.shadow.camera.right = 50;
+sunlight.shadow.camera.top = 50;
+sunlight.shadow.camera.bottom = -50;
 scene.add(sunlight);
+
+
 
 //adding a sun 
 const sunMesh = new THREE.Mesh(
@@ -43,18 +62,32 @@ const sunMesh = new THREE.Mesh(
     new THREE.MeshBasicMaterial({ color: 0xffd700 }) // Glowing yellow sun
 );
 sunMesh.position.set(100, 200, 100); // Positioning the sun
+//shadows
+sunMesh.castShadow=true;
 scene.add(sunMesh);
 //adding a moon
 const moonMesh = new THREE.Mesh(
     new THREE.SphereGeometry(5, 32, 32), // Large sphere for the moon
     new THREE.MeshBasicMaterial({ color: 0xffffff }) // Grayish moon
 );
-moonMesh.position.set(-100, 200, -100); // Positioning the moon
+moonMesh.position.set(100, 200, 100); // Positioning the moon
+//shadows 
+moonMesh.castShadow=true;
 scene.add(moonMesh); 
 
 //giving the moon lighting
 let moonlight = new THREE.DirectionalLight(0xffffff,0.5);
-moonlight.position.set(-100,200,-100);
+moonlight.position.set(100,200,100);
+//making the moonlight cast a shadow
+moonlight.castShadow=true;
+moonlight.shadow.mapSize.width = 4096;
+moonlight.shadow.mapSize.height = 4096;
+moonlight.shadow.camera.near = 0.5;
+moonlight.shadow.camera.far = 500;
+moonlight.shadow.camera.left = -50;
+moonlight.shadow.camera.right = 50;
+moonlight.shadow.camera.top = 50;
+moonlight.shadow.camera.bottom = -50;
 scene.add(moonlight);
 
 function addStars()
@@ -179,9 +212,10 @@ camera.add(chargingBar);
 const textureLoader = new THREE.TextureLoader();
 
 // Lighting
-const spotLight = new THREE.SpotLight(0xffffff, 1.5, 50, Math.PI / 4, 0.5);
-spotLight.position.set(0, 10, 0);
-scene.add(spotLight);
+// const spotLight = new THREE.SpotLight(0xffffff, 1.5, 50, Math.PI / 4, 0.5);
+// spotLight.position.set(0, 10, 0);
+// spotLight.castShadow=true;
+// scene.add(spotLight);
 
 // Floor (Court)
 // Load the texture
@@ -190,35 +224,18 @@ scene.add(spotLight);
 
 const landGeometry = new THREE.PlaneGeometry(60, 60, 200, 200); // Increase segments for better shader effect
 
-const landMaterial = new THREE.ShaderMaterial({
-    uniforms: {
-        uTime: { value: 0 }, // To animate if needed
-    },
-    vertexShader: `
-        varying vec2 vUv;
-        varying vec3 vPosition;
-        void main() {
-            vUv = uv;
-            vPosition = position;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
-    fragmentShader: `
-        varying vec2 vUv;
-        varying vec3 vPosition;
-
-        void main() {
-            float brightness = 0.5 + 0.5 * sin(vPosition.x * 0.2) * cos(vPosition.y * 0.2);
-            vec3 grassColor = mix(vec3(0.1, 0.3, 0.1), vec3(0.2, 0.6, 0.2), brightness);
-            gl_FragColor = vec4(grassColor, 1.0);
-        }
-    `,
+const landMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1e7940,  // A nice grass green color
+    roughness: 0.8,
+    metalness: 0.1
 });
 
 const land = new THREE.Mesh(landGeometry, landMaterial);
 land.rotation.x = -Math.PI / 2;
 land.position.y = -0.1;
 // land.position.z = 7.5;
+//making the land recieve shadows 
+land.receiveShadow=true;
 scene.add(land);
 
 loadBasketballCourt(scene, renderer);
@@ -234,12 +251,16 @@ const poleMaterial = new THREE.MeshStandardMaterial({
 });
 const pole = new THREE.Mesh(poleGeometry, poleMaterial);
 pole.position.set(0, 0, -7);
+
 scene.add(pole);
+pole.castShadow=true;
 
 // Create Base
 const baseGeometry = new THREE.BoxGeometry(1, 0.2, 0.5);
 const base = new THREE.Mesh(baseGeometry, poleMaterial);
 base.position.set(0, 0, -7); // -4.54
+base.castShadow=true;
+base.receiveShadow=true;
 scene.add(base);
 
 // Create Diagonal Support
@@ -247,6 +268,7 @@ const supportGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.3, 16);
 const support = new THREE.Mesh(supportGeometry, poleMaterial);
 support.position.set(0, 2, -6.74);
 support.rotation.set(Math.PI / 6, 0, 0);
+support.castShadow=true;
 scene.add(support);
 
 // net (planning on working on this either this weekend or next week)
@@ -263,6 +285,7 @@ const rimMaterial = new THREE.MeshStandardMaterial({
 const rim = new THREE.Mesh(rimGeometry, rimMaterial);
 rim.position.set(0, 2.565, -6.04);
 rim.rotation.x = Math.PI / 2;
+rim.castShadow=true;
 scene.add(rim);
 
 // Backboard
@@ -272,18 +295,20 @@ const backboardTexture = textureLoader.load('photos/backboard.jpg');
 
 // created an array to prevent the jpg from showing on all sides of the backboard
 const materials = [
-    new THREE.MeshBasicMaterial({ color: 0xffffff }),  // Right side
-    new THREE.MeshBasicMaterial({ color: 0xffffff }),  // Left side
-    new THREE.MeshBasicMaterial({ color: 0xffffff }),  // Top side
-    new THREE.MeshBasicMaterial({ color: 0xffffff }),  // Bottom side
-    new THREE.MeshBasicMaterial({ map: backboardTexture }), // Front (with texture)
-    new THREE.MeshBasicMaterial({ color: 0xffffff })   // Back side
+    new THREE.MeshStandardMaterial({ color: 0xffffff }),  // Right side
+    new THREE.MeshStandardMaterial({ color: 0xffffff }),  // Left side
+    new THREE.MeshStandardMaterial({ color: 0xffffff }),  // Top side
+    new THREE.MeshStandardMaterial({ color: 0xffffff }),  // Bottom side
+    new THREE.MeshStandardMaterial({ map: backboardTexture }), // Front (with texture)
+    new THREE.MeshStandardMaterial({ color: 0xffffff })   // Back side
 ];
 
 // Create the backboard geometry (a flat rectangle)
 const backboardGeometry = new THREE.BoxGeometry(2, 1, .1);
 const backboard = new THREE.Mesh(backboardGeometry, materials);
 backboard.position.set(0, 3, -6.4);
+backboard.castShadow=true;
+backboard.receiveShadow=true;
 scene.add(backboard);
 
 // Controls
@@ -308,6 +333,7 @@ function shootBall() {
     const ball = new THREE.Mesh(ballGeometry, ballMaterial);
     ball.geometry.computeBoundingSphere();
     ball.frustumCulled = false;
+    ball.castShadow=true;
     scene.add(ball);
     
     ball.position.copy(camera.position);    
