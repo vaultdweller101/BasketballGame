@@ -32,4 +32,5 @@ You can also jump by pressing left shift, and move around by pressing AWSD keys.
 
 ## What our game looks like
 
-![image-0](docs/Demo1.gif)
+https://github.com/user-attachments/assets/49dfe104-deb9-4110-9ee1-6709ac0b51ed
+
