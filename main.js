@@ -63,7 +63,7 @@ const sunMesh = new THREE.Mesh(
 );
 sunMesh.position.set(100, 200, 100); // Positioning the sun
 //shadows
-sunMesh.castShadow=true;
+//sunMesh.castShadow=true;
 scene.add(sunMesh);
 //adding a moon
 const moonMesh = new THREE.Mesh(
@@ -72,7 +72,7 @@ const moonMesh = new THREE.Mesh(
 );
 moonMesh.position.set(100, 200, 100); // Positioning the moon
 //shadows 
-moonMesh.castShadow=true;
+//moonMesh.castShadow=true
 scene.add(moonMesh); 
 
 //giving the moon lighting
