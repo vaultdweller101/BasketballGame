@@ -73,7 +73,7 @@ const moonMesh = new THREE.Mesh(
 );
 moonMesh.position.set(100, 200, 100); // Positioning the moon
 //shadows 
-moonMesh.castShadow=true;
+//moonMesh.castShadow=true;
 scene.add(moonMesh); 
 
 //giving the moon lighting
