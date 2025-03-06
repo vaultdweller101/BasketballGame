@@ -617,11 +617,19 @@ function ballSimulation(ballObj, delta){
         ballObj.velocity.add(drag_acceleration.multiplyScalar(delta));
 
         // Make the ball spin visually
-        if (ballObj.velocity.x > 0){
-            ballObj.mesh.rotation.x += delta * angular_velocity;
-        }
-        else{
-            ballObj.mesh.rotation.x -= delta * angular_velocity;
+        if (ballObj.velocity.length() > 0.1){
+            if (ballObj.velocity.z > 0){
+                ballObj.mesh.rotation.x += delta * angular_velocity;
+            }
+            else if (ballObj.velocity.z < 0){
+                ballObj.mesh.rotation.x -= delta * angular_velocity;
+            }
+            if (ballObj.velocity.x > 0){
+                ballObj.mesh.rotation.z += delta * angular_velocity;
+            }
+            else if (ballObj.velocity.x < 0){
+                ballObj.mesh.rotation.z -= delta * angular_velocity;
+            }
         }
     }
 
