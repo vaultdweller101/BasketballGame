@@ -153,6 +153,8 @@ const clock = new THREE.Clock();
 const clock2 = new THREE.Clock();
 // This clock is used only for ballSimulation
 const clock3 = new THREE.Clock();
+// This clock is used only to jump
+const clock4 = new THREE.Clock();
 
 // Crosshair
 const crosshairGeometry = new THREE.CircleGeometry(0.001, 32);
@@ -333,6 +335,33 @@ function charge_ball(){
     multiplier = (adjustment_factor + 1);
 }
 
+let jump_velocity = new THREE.Vector3(0, 5, 0);
+let final_jump_velocity = jump_velocity.clone();
+let deltaTime;
+let id;
+
+function jump() {
+
+    let jumpLoop = () => {
+
+        id = requestAnimationFrame(jumpLoop);
+        deltaTime = clock4.getDelta();
+        jump_velocity.y -= 9.8 * deltaTime; // Simulating gravity
+        final_jump_velocity.set(jump_velocity.x, jump_velocity.y, jump_velocity.z);
+        camera.position.add(final_jump_velocity.multiplyScalar(deltaTime));
+
+        if (camera.position.y <= 1.5) { // If landed, stop jumping
+            console.log("Land");
+            camera.position.y = 1.5; // Reset to ground level
+            jump_velocity.set(0, 5, 0); // Reset jump velocity
+            cancelAnimationFrame(id);
+            return;
+        }
+    };
+
+    jumpLoop();
+}
+
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {
         charge_ball();
@@ -345,13 +374,16 @@ document.addEventListener('keydown', (event) => {
             setNightMode();
         }
     }
+    if (event.code === 'ShiftLeft') {
+        camera.position.y = 1.6;
+        jump();
+    }
 });
 
 setDayMode();
 
 // Deconstruct rim into a bunch of spheres
 const spheres = [];
-// rim.visible = false;
 
 function create_spheres(num){
     let center = rim.position.clone();
@@ -438,7 +470,7 @@ function randomizeWind() {
     wind.applyMatrix4(rotationMatrixZ);
 
     // Random wind magnitude according to this reference: https://www.weather.gov/pqr/wind, Calm to Moderate Breeze
-    wind.multiplyScalar(Math.random() * 30);
+    wind.multiplyScalar(Math.random() * 8);
 }
 
 // Ball physics
@@ -562,7 +594,7 @@ function animate() {
     if (keys['KeyD']) controls.moveRight(final_speed);
     
     // Every 1 seconds
-    setInterval(randomizeWind, 1000); 
+    setInterval(randomizeWind, 3000); 
     current_time = clock.getElapsedTime();
 
     balls.forEach((ballObj) => {
