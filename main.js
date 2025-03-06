@@ -8,6 +8,7 @@ import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { mx_fractal_noise_float } from 'three/src/nodes/TSL.js';
 import loadBasketballCourt from './court/basketballCourt.js';
 import {updateScore} from './score.js';
+import loadNet from './net/net.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -221,7 +222,11 @@ land.position.y = -0.1;
 // land.position.z = 7.5;
 scene.add(land);
 
+// loading in the basketball court
 loadBasketballCourt(scene, renderer);
+
+// loading in the net
+loadNet(scene, renderer);
 
 // support for the hoop
 
