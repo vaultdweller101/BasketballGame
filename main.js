@@ -120,11 +120,13 @@ function addStars()
 
 const stars=addStars();
 //fucntion to set up daytime settings
+//now I will create clouds for the daytime 
 function setDayMode() {
     isNight=false;
 
     //daytime color 
     scene.background =new THREE.Color(0x87CEEB);
+    scene.add(sky);
     
     skyUniforms['turbidity'].value = 0.0001; // Lower = less hazy
     skyUniforms['rayleigh'].value = 0.1; // Less blue scattering
