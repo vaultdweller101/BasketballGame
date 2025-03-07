@@ -421,7 +421,7 @@ document.addEventListener('keydown', (event) => {
         }
     }
     if (event.code === 'ShiftLeft') {
-        camera.position.y += 0.2;
+        ///camera.position.y += 0.2;
         jump();
     }
 });
@@ -482,7 +482,7 @@ poleBB.setFromObject(pole);
 let ballBS;
 
 // ScoreBS
-let scoreBS = new THREE.Sphere(rim.position, 0.13);
+let scoreBS = new THREE.Sphere(rim.position, 0.14);
 
 let angle;
 let ballToRim = new THREE.Vector3();
