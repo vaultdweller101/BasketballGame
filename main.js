@@ -435,22 +435,55 @@ setDayMode();
 // Deconstruct rim into a bunch of spheres
 const spheres = [];
 
-function create_spheres(num){
-    let center = rim.position.clone();
+// 
+// rim.visible = false;
+
+function create_spheres(num, center_og, size = 0.02, radius_og = 0.3){
+    let center = center_og.clone();
     let alpha = 0;
     let d_alpha = 2 * Math.PI / num;
     // sin(alpha) + cos(alpha)
     for (let i = 0; i < num; i ++){
         alpha += d_alpha;
-        center.x = rim.position.x + 0.3 * Math.sin(alpha);
-        center.z = rim.position.z + 0.3 * Math.cos(alpha);
-        let sphereBB = new THREE.Sphere(center.clone(), 0.02);
+        center.x = center_og.x + radius_og * Math.sin(alpha);
+        center.z = center_og.z + radius_og * Math.cos(alpha);
+        let sphereBB = new THREE.Sphere(center.clone(), size);
         spheres.push(sphereBB);
+
+        // // Create a visual representation of the sphere
+        // let geometry = new THREE.SphereGeometry(size, 16, 16);
+        // let material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+        // let sphereMesh = new THREE.Mesh(geometry, material);
+
+        // // Set position of the sphere
+        // sphereMesh.position.copy(center);
+        
+        // // Add to the scene
+        // scene.add(sphereMesh);
     }
     console.log("Done adding collision spheres for rim");
 }
 
-create_spheres(50);
+// For the rim itself
+create_spheres(50, rim.position);
+// For the net
+const net_collision_sphere_size = 0.01;
+let rim_position_1 = rim.position.clone();
+let delta_width = 0.02;
+let new_radius = 0.32;
+
+for (let i = 0; i < 8; i ++ ){
+    rim_position_1.y -= 0.05;
+    new_radius -= delta_width;
+    create_spheres(50, rim_position_1, net_collision_sphere_size, new_radius);
+}
+
+for (let i = 0; i < 4; i ++){
+    rim_position_1.y -= 0.05;
+    create_spheres(50, rim_position_1, net_collision_sphere_size, new_radius);
+}
+
+
 
 function check_collision_against_spheres(ballBB){
     for (let i = 0; i < spheres.length; i++){
@@ -486,7 +519,7 @@ poleBB.setFromObject(pole);
 let ballBS;
 
 // ScoreBS
-let scoreBS = new THREE.Sphere(rim.position, 0.14);
+let scoreBS = new THREE.Sphere(rim.position, 0.15);
 
 let angle;
 let ballToRim = new THREE.Vector3();
@@ -537,6 +570,8 @@ let angular_velocity = 6;
 let spinAxis = new THREE.Vector3(0, 0, 0);
 // Velocity projection on xz plane
 let projection = new THREE.Vector3(0,0,0);
+// vector to aim ball at the center of the net
+let throw_vector;
 
 function ballSimulation(ballObj, delta){
     ballBS = ballObj.mesh.geometry.boundingSphere;
@@ -581,7 +616,6 @@ function ballSimulation(ballObj, delta){
         ballObj.velocity.reflect(ballToRim);
     }
 
-
     // Scoring
     if ( scoreBS.containsPoint(ballObj.mesh.position) && ballObj.velocity.y < 0 && ballObj.score == false){
         ballObj.score = true;
@@ -593,6 +627,10 @@ function ballSimulation(ballObj, delta){
             scorePerShot = 2;
         }
         updateScore(scorePerShot, balls.length);
+
+        // throw_vector.subVectors(rim.position, ballObj.mesh.position);
+        // throw_vector.multiplyScalar(0.1);
+        // ballObj.mesh.position.add(throw_vector);
     }
 
     // apply gravity, lift and drag only while on air
