@@ -1,0 +1,11 @@
+Model Information:
+* title:	Chain Link Fence
+* source:	https://sketchfab.com/3d-models/chain-link-fence-e50ad4cca91844fea4d60589ebcd853c
+* author:	Natisis94 (https://sketchfab.com/sisaynati94)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Chain Link Fence" (https://sketchfab.com/3d-models/chain-link-fence-e50ad4cca91844fea4d60589ebcd853c) by Natisis94 (https://sketchfab.com/sisaynati94) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

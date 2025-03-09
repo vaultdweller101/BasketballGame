@@ -9,6 +9,7 @@ import { mx_fractal_noise_float } from 'three/src/nodes/TSL.js';
 import loadBasketballCourt from './court/basketballCourt.js';
 import {updateScore} from './score.js';
 import loadNet from './net/net.js';
+import loadFence from './fence/fence.js';
 import ctreeLoad from './cocotree/cTree.js';
 import stLightLoad from './stadLights/lights.js';
 
@@ -251,6 +252,9 @@ loadBasketballCourt(scene, renderer);
 
 // loading in the net
 loadNet(scene, renderer);
+
+// loading in the fence
+loadFence(scene);
 
 // support for the hoop
 
