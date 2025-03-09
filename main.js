@@ -11,7 +11,6 @@ import {updateScore} from './score.js';
 import loadNet from './models/net/net.js';
 import ctreeLoad from './models/cocotree/cTree.js';
 import stLightLoad from './models/stadLights/lights.js';
-import createFence from './walls_fences/fenceManager.js';
 import createWall from './walls_fences/wallManager.js';
 import { create_spheres, check_collision_against_spheres } from './collision_spheres.js';
 
@@ -254,8 +253,6 @@ loadBasketballCourt(scene, renderer);
 
 // loading in the net
 loadNet(scene, renderer);
-
-createFence(scene, renderer);
 
 createWall(scene, renderer);
 
