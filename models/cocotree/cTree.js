@@ -15,7 +15,7 @@ function ctreeLoad(scene, renderer) {
 
     // Load the model
     loader.load(
-        '/cocotree/scene.gltf',
+        '/models/cocotree/scene.gltf',
         function (gltf) {
             const originalTree = gltf.scene;
             originalTree.traverse((child) => {

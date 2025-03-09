@@ -15,7 +15,7 @@ function loadBasketballCourt(scene, renderer) {
     // Load the model
     loader.load(
         // URL to the GLB or GLTF file
-        '/court/scene.gltf',
+        '/models/court/scene.gltf',
 
         // Called when the model is successfully loaded
         function (gltf) {

@@ -6,12 +6,12 @@ import {createHalfCourtFloor} from './halfcourt.js';
 //this is for the sky 
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { mx_fractal_noise_float } from 'three/src/nodes/TSL.js';
-import loadBasketballCourt from './court/basketballCourt.js';
+import loadBasketballCourt from './models/court/basketballCourt.js';
 import {updateScore} from './score.js';
-import loadNet from './net/net.js';
-import loadFence from './fence/fence.js';
-import ctreeLoad from './cocotree/cTree.js';
-import stLightLoad from './stadLights/lights.js';
+import loadNet from './models/net/net.js';
+import loadFence from './models/fence/fence.js';
+import ctreeLoad from './models/cocotree/cTree.js';
+import stLightLoad from './models/stadLights/lights.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -253,54 +253,80 @@ loadBasketballCourt(scene, renderer);
 // loading in the net
 loadNet(scene, renderer);
 
-// loading in the fence
+// Inside fenceManager.js where you process your loaded fence
 loadFence((fence) => {
-    // Original fence position
-    // fence.position.set(4.85, -0.9, 6.9); // 8.2 distance for fence
-    // scene.add(fence);
-
-    // // Duplicate the fence by cloning it
-    // const fenceClone = fence.clone();
-    // fenceClone.position.set(13.05, -0.9, 6.9);  // Example new position
-    // scene.add(fenceClone);
-
-    const fenceArray = [];
-    const numberOfFences = 4; // how many fence segments you want
-    const offsetX = 8.2; // distance between each fence on the x-axis
+    // Set base positions
     fence.position.y = -0.9;
     fence.position.z = 6.9;
-    let startingX = -15.38;
-
+    
+    const fenceArray = [];
+    const numberOfFences = 4;
+    const offsetX = 8.2;
+    const startingX = -15.38;
+  
+    // Duplicate fence segments with shadow settings
     for (let i = 0; i < numberOfFences; i++) {
       const fenceClone = fence.clone();
       fenceClone.position.set(startingX + i * offsetX, fence.position.y, fence.position.z);
+      
+      fenceClone.traverse((child) => {
+        if (child.isMesh) {
+          // Clone material to avoid affecting shared instances
+          child.material = child.material.clone();
+          // Set shadow properties
+          child.castShadow = true;
+          child.receiveShadow = true;
+          // Optionally, convert MeshBasicMaterial to MeshStandardMaterial
+          if (child.material.type === 'MeshBasicMaterial') {
+            const oldMaterial = child.material;
+            child.material = new THREE.MeshStandardMaterial({
+              map: oldMaterial.map,
+              color: oldMaterial.color,
+              roughness: 0.8,
+              metalness: 0.1
+            });
+          }
+        }
+      });
+      
       scene.add(fenceClone);
       fenceArray.push(fenceClone);
     }
     
-    // Clone the fence to create a half fence
+    // Create a half fence with clipping and shadow settings
     const halfFence = fence.clone();
-    
-    // Traverse the half fence and clone its materials
     halfFence.traverse((child) => {
-        if (child.isMesh) {
-            // Clone the material so changes don't affect other objects
-            child.material = child.material.clone();
-            
-            // Assign the clipping plane to this material
-            const clippingPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 18.478);
-            child.material.clippingPlanes = [clippingPlane];
-            child.material.clipShadows = true;
+      if (child.isMesh) {
+        child.material = child.material.clone();
+        // Set shadow properties for the half fence
+        child.castShadow = true;
+        child.receiveShadow = true;
+        
+        // Assign the clipping plane (adjust the normal and constant as needed)
+        const clippingPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 18.478);
+        child.material.clippingPlanes = [clippingPlane];
+        child.material.clipShadows = true;
+        
+        // Optionally, convert material if it's MeshBasicMaterial
+        if (child.material.type === 'MeshBasicMaterial') {
+          const oldMaterial = child.material;
+          child.material = new THREE.MeshStandardMaterial({
+            map: oldMaterial.map,
+            color: oldMaterial.color,
+            roughness: 0.8,
+            metalness: 0.1
+          });
         }
+      }
     });
     
-    // Adjust the position of the half fence as needed
-    halfFence.position.x += 17.42; // Example offset
+    halfFence.position.x += 17.42;
     scene.add(halfFence);
-});
-
-// Enable local clipping on the renderer (usually done during initialization)
-renderer.localClippingEnabled = true;
+  });
+  
+  // And don't forget to enable local clipping on the renderer
+  renderer.localClippingEnabled = true;
+  
 
 // support for the hoop
 
@@ -355,6 +381,9 @@ scene.add(rim);
 // Load the backboard texture
 const backboardTexture = textureLoader.load('photos/backboard.jpg');
 
+backboardTexture.wrapS = THREE.RepeatWrapping;
+backboardTexture.wrapT = THREE.RepeatWrapping;
+
 // created an array to prevent the jpg from showing on all sides of the backboard
 const materials = [
     new THREE.MeshStandardMaterial({ color: 0xffffff }),  // Right side
@@ -387,7 +416,7 @@ const speed = 10;
 
 // Create a texture loader
 const textureLoaderBall = new THREE.TextureLoader();
-const basketballTexture = textureLoaderBall.load('ball/ball.png');  // Adjust path if needed
+const basketballTexture = textureLoaderBall.load('/textures/ball/ball.png');  // Adjust path if needed
 
 // Ball shooting
 const balls = [];

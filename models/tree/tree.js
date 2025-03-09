@@ -15,7 +15,7 @@ function treeLoad(scene, renderer) {
 
     // Load the model
     loader.load(
-        '/tree/scene.gltf',
+        '/models/tree/scene.gltf',
         function (gltf) {
             const originalTree = gltf.scene;
             originalTree.traverse((child) => {

@@ -9,7 +9,7 @@ function loadNet(scene, renderer) {
     // Load the model
     loader.load(
         // URL to the GLB or GLTF file
-        '/net/scene.gltf',
+        '/models/net/scene.gltf',
 
         // Called when the model is successfully loaded
         function (gltf) {

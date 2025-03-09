@@ -9,7 +9,7 @@ function loadFence(callback) {
     // Load the model
     loader.load(
         // URL to the GLB or GLTF file
-        '/fence/scene.gltf',
+        '/models/fence/scene.gltf',
 
         // Called when the model is successfully loaded
         function (gltf) {

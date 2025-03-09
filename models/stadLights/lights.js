@@ -15,7 +15,7 @@ function stLightLoad(scene, renderer) {
 
     // Load the model
     loader.load(
-        '/stadLights/scene.gltf',
+        '/models/stadLights/scene.gltf',
         function (gltf) {
             const originalLight = gltf.scene;
             originalLight.traverse((child) => {
