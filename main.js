@@ -12,6 +12,7 @@ import loadNet from './models/net/net.js';
 import loadFence from './models/fence/fence.js';
 import ctreeLoad from './models/cocotree/cTree.js';
 import stLightLoad from './models/stadLights/lights.js';
+import { create_spheres, check_collision_against_spheres } from './collision_spheres.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -513,65 +514,30 @@ setDayMode();
 
 // Deconstruct rim into a bunch of spheres
 const spheres = [];
+// Deconstruct net into a bunch of spheres
+const net_spheres = [];
 
-// 
 // rim.visible = false;
 
-function create_spheres(num, center_og, size = 0.02, radius_og = 0.3){
-    let center = center_og.clone();
-    let alpha = 0;
-    let d_alpha = 2 * Math.PI / num;
-    // sin(alpha) + cos(alpha)
-    for (let i = 0; i < num; i ++){
-        alpha += d_alpha;
-        center.x = center_og.x + radius_og * Math.sin(alpha);
-        center.z = center_og.z + radius_og * Math.cos(alpha);
-        let sphereBB = new THREE.Sphere(center.clone(), size);
-        spheres.push(sphereBB);
-
-        // // Create a visual representation of the sphere
-        // let geometry = new THREE.SphereGeometry(size, 16, 16);
-        // let material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-        // let sphereMesh = new THREE.Mesh(geometry, material);
-
-        // // Set position of the sphere
-        // sphereMesh.position.copy(center);
-        
-        // // Add to the scene
-        // scene.add(sphereMesh);
-    }
-    console.log("Done adding collision spheres for rim");
-}
-
 // For the rim itself
-create_spheres(50, rim.position);
+create_spheres(50, rim.position, 0.02, 0.3, spheres);
 // For the net
-const net_collision_sphere_size = 0.01;
+const net_collision_sphere_size = 0.02;
 let rim_position_1 = rim.position.clone();
 let delta_width = 0.02;
-let new_radius = 0.32;
+let new_radius = 0.34;
 
 for (let i = 0; i < 8; i ++ ){
     rim_position_1.y -= 0.05;
     new_radius -= delta_width;
-    create_spheres(50, rim_position_1, net_collision_sphere_size, new_radius);
+    create_spheres(50, rim_position_1, net_collision_sphere_size, new_radius, net_spheres);
 }
 
 for (let i = 0; i < 4; i ++){
     rim_position_1.y -= 0.05;
-    create_spheres(50, rim_position_1, net_collision_sphere_size, new_radius);
+    create_spheres(50, rim_position_1, net_collision_sphere_size, new_radius, net_spheres);
 }
 
-
-
-function check_collision_against_spheres(ballBB){
-    for (let i = 0; i < spheres.length; i++){
-        if (ballBB.intersectsSphere(spheres[i])){
-            return i;
-        }
-    }
-    return -1;
-}
 
 // Specify backboard normals for collision detection for front and side
 const backboardNormals = new THREE.Vector3(0, 0, 1);
@@ -638,6 +604,7 @@ function randomizeWind() {
 // Ball physics
 let final_velocity = new THREE.Vector3(0,0,0);
 let which_sphere;
+let which_sphere_net;
 // mass of basketball: 600 g = 0.6 kg
 const mass = 0.6;
 let drag_acceleration = new THREE.Vector3(0,0,0);
@@ -650,13 +617,14 @@ let spinAxis = new THREE.Vector3(0, 0, 0);
 // Velocity projection on xz plane
 let projection = new THREE.Vector3(0,0,0);
 // vector to aim ball at the center of the net
-let throw_vector;
+let throw_vector = new THREE.Vector3(0,0,0);
 
 function ballSimulation(ballObj, delta){
     ballBS = ballObj.mesh.geometry.boundingSphere;
     ballBS.center.copy(ballObj.mesh.position);
     
-    which_sphere = check_collision_against_spheres(ballBS);
+    which_sphere = check_collision_against_spheres(ballBS, spheres);
+    which_sphere_net = check_collision_against_spheres(ballBS, net_spheres);
 
     // Check if the ball hit the ground
     if (ballObj.mesh.position.y - land.position.y <= 0.3){
@@ -672,7 +640,10 @@ function ballSimulation(ballObj, delta){
             angle = ballObj.velocity.angleTo(backboardNormals);
             ballObj.velocity.applyAxisAngle(backboardNormals, -angle);
             // // apply bounce
-            ballObj.velocity.multiplyScalar(-0.4);
+            ballObj.velocity.x *= -0.6;
+            ballObj.velocity.z *= -0.6;
+            ballObj.velocity.y *= -1;
+            // multiplyScalar(-0.6);
             // collision immune
             ballObj.collision_immune = true;
             ballObj.collision_time = clock.getElapsedTime();
@@ -685,13 +656,17 @@ function ballSimulation(ballObj, delta){
         ballObj.velocity.applyAxisAngle(supportNormals, -angle);
         // // apply bounce
         ballObj.velocity.multiplyScalar(-1);
-        // collision immune
-        ballObj.collision_immune = true;
-        ballObj.collision_time = clock.getElapsedTime();
     }
     // Check if the ball hit the rim
     else if (which_sphere != -1){
         ballToRim.subVectors(spheres[which_sphere].center, ballObj.mesh.position).normalize();
+        ballObj.velocity.reflect(ballToRim);
+        ballObj.velocity.y = - Math.abs(ballObj.velocity.y);
+    }
+
+    // Check if the ball hit the net
+    if (which_sphere_net != -1){
+        ballToRim.subVectors(net_spheres[which_sphere_net].center, ballObj.mesh.position).normalize();
         ballObj.velocity.reflect(ballToRim);
     }
 
@@ -706,10 +681,6 @@ function ballSimulation(ballObj, delta){
             scorePerShot = 2;
         }
         updateScore(scorePerShot, balls.length);
-
-        // throw_vector.subVectors(rim.position, ballObj.mesh.position);
-        // throw_vector.multiplyScalar(0.1);
-        // ballObj.mesh.position.add(throw_vector);
     }
 
     // apply gravity, lift and drag only while on air
