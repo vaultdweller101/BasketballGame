@@ -1,7 +1,8 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { call } from 'three/tsl';
 
 // Function to load a GLTF model
-function loadFence(scene) {
+function loadFence(callback) {
     // Create a GLTF loader
     const loader = new GLTFLoader();
 
@@ -13,12 +14,10 @@ function loadFence(scene) {
         // Called when the model is successfully loaded
         function (gltf) {
             const fence = gltf.scene;
-            fence.position.set(0, -.9, 6.9);
+            // fence.position.set(0, -.9, 6.9);
             fence.scale.set(1, 1, 1);
 
-            // Add the model to the scene
-            scene.add(fence);
-            console.log('Fence loaded successfully!');
+            callback(fence);
         },
 
         // Called while loading is in progress

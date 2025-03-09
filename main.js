@@ -254,7 +254,53 @@ loadBasketballCourt(scene, renderer);
 loadNet(scene, renderer);
 
 // loading in the fence
-loadFence(scene);
+loadFence((fence) => {
+    // Original fence position
+    // fence.position.set(4.85, -0.9, 6.9); // 8.2 distance for fence
+    // scene.add(fence);
+
+    // // Duplicate the fence by cloning it
+    // const fenceClone = fence.clone();
+    // fenceClone.position.set(13.05, -0.9, 6.9);  // Example new position
+    // scene.add(fenceClone);
+
+    const fenceArray = [];
+    const numberOfFences = 4; // how many fence segments you want
+    const offsetX = 8.2; // distance between each fence on the x-axis
+    fence.position.y = -0.9;
+    fence.position.z = 6.9;
+    let startingX = -15.38;
+
+    for (let i = 0; i < numberOfFences; i++) {
+      const fenceClone = fence.clone();
+      fenceClone.position.set(startingX + i * offsetX, fence.position.y, fence.position.z);
+      scene.add(fenceClone);
+      fenceArray.push(fenceClone);
+    }
+    
+    // Clone the fence to create a half fence
+    const halfFence = fence.clone();
+    
+    // Traverse the half fence and clone its materials
+    halfFence.traverse((child) => {
+        if (child.isMesh) {
+            // Clone the material so changes don't affect other objects
+            child.material = child.material.clone();
+            
+            // Assign the clipping plane to this material
+            const clippingPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 18.478);
+            child.material.clippingPlanes = [clippingPlane];
+            child.material.clipShadows = true;
+        }
+    });
+    
+    // Adjust the position of the half fence as needed
+    halfFence.position.x += 17.42; // Example offset
+    scene.add(halfFence);
+});
+
+// Enable local clipping on the renderer (usually done during initialization)
+renderer.localClippingEnabled = true;
 
 // support for the hoop
 
