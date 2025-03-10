@@ -16,7 +16,8 @@ function loadGrass(scene, renderer) {
         { x: 25, y: 0, z: -25 },
         { x: -25, y: 0, z: 25 },
         { x: -25, y: 0, z: -25 },
-        { x: -20, y: 0, z: 15 }
+        { x: -25, y: 0, z: 25 },
+        { x: -20, y: 0, z: 20 }
     ];
 
     positions.forEach((position) => {
