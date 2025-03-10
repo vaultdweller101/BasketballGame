@@ -13,6 +13,7 @@ import ctreeLoad from './models/cocotree/cTree.js';
 import stLightLoad from './models/stadLights/lights.js';
 import createWall from './walls_fences/wallManager.js';
 import { create_spheres, check_collision_against_spheres } from './collision_spheres.js';
+import loadGrass from './models/grass/grassM.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -250,7 +251,7 @@ scene.add(land);
 
 // loading in the basketball court
 loadBasketballCourt(scene, renderer);
-
+loadGrass(scene,renderer);
 // loading in the net
 loadNet(scene, renderer);
 
