@@ -40,20 +40,20 @@ function stLightLoad(scene, renderer) {
     
             // Position and add the original tree
             originalLight.position.set(-12, -1, -15);
-            originalLight.scale.set(0.0025, 0.0025, 0.0025);
+            originalLight.scale.set(2, 2, 2);
             originalLight.rotateY(-Math.PI/2);
             //scene.add(originalLight);
     
             const LightClone3 = originalLight.clone(true);
             LightClone3.position.set(-12, -1, -15);
-            LightClone3.scale.set(0.0025, 0.0025, 0.0025);
-            LightClone3.rotateY(Math.PI/6);
+            LightClone3.scale.set(2, 2, 2);
+          //  LightClone3.rotateY(-Math.PI);
             scene.add(LightClone3);
     
             const LightClone2 = originalLight.clone(true);
             LightClone2.position.set(12, -1, -15);
-            LightClone2.scale.set(0.0025, 0.0025, 0.0025);
-            LightClone2.rotateY(-Math.PI/6);
+            LightClone2.scale.set(2, 2, 2);
+           // LightClone2.rotateY(-Math.PI);
             scene.add(LightClone2);
            
     
