@@ -13,7 +13,6 @@ import ctreeLoad from './models/cocotree/cTree.js';
 import stLightLoad from './models/stadLights/lights.js';
 import createWall from './walls_fences/wallManager.js';
 import { create_spheres, check_collision_against_spheres } from './collision_spheres.js';
-import loadGrass from './models/grass/grassM.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -251,7 +250,7 @@ scene.add(land);
 
 // loading in the basketball court
 loadBasketballCourt(scene, renderer);
-loadGrass(scene,renderer);
+
 // loading in the net
 loadNet(scene, renderer);
 
@@ -330,7 +329,170 @@ backboard.position.set(0, 3, -6.4);
 backboard.castShadow=true;
 backboard.receiveShadow=true;
 scene.add(backboard);
+//making the players arms
+function createPlayerArms() {
+    // Create a group to hold both arms
+    const armsGroup = new THREE.Group();
+    
+    // Material for the arms
+    const armMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffceb4, // Skin tone color
+      roughness: 0.7,
+      metalness: 0.1
+    });
+    
+    // Create right arm
+    const rightArmGeometry = new THREE.BoxGeometry(0.08, 0.5, 0.08);
+    const rightArm = new THREE.Mesh(rightArmGeometry, armMaterial);
+    rightArm.position.set(0.2, -0.3, -0.2);
+    rightArm.rotation.set(0.3, 0, 0);
+    
+    // Create left arm
+    const leftArmGeometry = new THREE.BoxGeometry(0.08, 0.5, 0.08);
+    const leftArm = new THREE.Mesh(leftArmGeometry, armMaterial);
+    leftArm.position.set(-0.2, -0.3, -0.2);
+    leftArm.rotation.set(0.3, 0, 0);
+    
+    // Add some sleeves
+    const sleevesMaterial = new THREE.MeshStandardMaterial({
+      color: 0x4285f4, // Blue color for sleeves
+      roughness: 0.5,
+      metalness: 0.1
+    });
+    
+    // Right sleeve
+    const rightSleeveGeometry = new THREE.CylinderGeometry(0.05, 0.045, 0.12, 16);
+    const rightSleeve = new THREE.Mesh(rightSleeveGeometry, sleevesMaterial);
+    rightSleeve.position.set(0, 0.18, 0);
+    rightSleeve.rotation.set(Math.PI/2, 0, 0);
+    rightArm.add(rightSleeve);
+    
+    // Left sleeve
+    const leftSleeveGeometry = new THREE.CylinderGeometry(0.05, 0.045, 0.12, 16);
+    const leftSleeve = new THREE.Mesh(leftSleeveGeometry, sleevesMaterial);
+    leftSleeve.position.set(0, 0.18, 0);
+    leftSleeve.rotation.set(Math.PI/2, 0, 0);
+    leftArm.add(leftSleeve);
+    
+    // Improved Hand Creation
+    function createHand(isRight) {
+      const handGroup = new THREE.Group();
+      
+      // Hand material
+      const handMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffceb4, // Skin tone
+        roughness: 0.6,
+        metalness: 0.1
+      });
+      
+      // Palm - slightly flattened sphere
+      const palmGeometry = new THREE.SphereGeometry(0.04, 16, 16);
+      const palm = new THREE.Mesh(palmGeometry, handMaterial);
+      palm.scale.set(1.2, 0.7, 1);
+      handGroup.add(palm);
+      
+      // Thumb
+      const thumbGeometry = new THREE.CapsuleGeometry(0.015, 0.05, 4, 8);
+      const thumb = new THREE.Mesh(thumbGeometry, handMaterial);
+      thumb.position.set(isRight ? 0.04 : -0.04, 0, -0.01);
+      thumb.rotation.set(0.3, isRight ? -0.5 : 0.5, isRight ? 0.7 : -0.7);
+      handGroup.add(thumb);
+      
+      // Fingers
+      const fingerPositions = [
+        { x: 0.015, y: 0, z: 0.035 },  // Index
+        { x: 0, y: 0, z: 0.04 },       // Middle
+        { x: -0.015, y: 0, z: 0.035 }, // Ring
+        { x: -0.03, y: 0, z: 0.03 }    // Pinky
+      ];
+      
+      fingerPositions.forEach((pos, index) => {
+        const fingerGeometry = new THREE.CapsuleGeometry(
+          0.012 - (index === 3 ? 0.003 : 0), // Pinky is slightly smaller
+          0.05 - (index === 3 ? 0.01 : 0),
+          4, 8
+        );
+        const finger = new THREE.Mesh(fingerGeometry, handMaterial);
+        
+        // Mirror positions for left hand
+        const xPos = isRight ? pos.x : -pos.x;
+        finger.position.set(xPos, pos.y, pos.z);
+        finger.rotation.set(-0.2, 0, 0);
+        handGroup.add(finger);
+      });
+      
+      return handGroup;
+    }
+    
+    // Create and add right hand
+    const rightHand = createHand(true);
+    rightHand.position.set(0, -0.25, 0);
+    rightHand.rotation.set(-0.2, 0, 0); // Adjust hand rotation
+    rightArm.add(rightHand);
+    
+    // Create and add left hand
+    const leftHand = createHand(false);
+    leftHand.position.set(0, -0.25, 0);
+    leftHand.rotation.set(-0.2, 0, 0); // Adjust hand rotation
+    leftArm.add(leftHand);
+    
+    // Add arms to the group
+    armsGroup.add(rightArm);
+    armsGroup.add(leftArm);
+    
+    // Add the arms to the camera
+    camera.add(armsGroup);
+    
+    // Return references to animate them
+    return {
+      rightArm,
+      leftArm,
+      armsGroup,
+      rightHand,
+      leftHand
+    };
+  }
+  
+//creating the arms 
+const playerArms = createPlayerArms();
+//now to make parameter for the animation
+let armSwingPhase=0;
+const armSwingSpeed=5;
+const armSwingAmount=0.3; //how far the arm will swing 
+const armClock = new THREE.Clock();
 
+//animating them seprately 
+function animateArms() 
+{
+    const armDelta=armClock.getDelta();
+    let isMoving =false;
+
+    if(keys['KeyW']||keys['keyS']||keys['KeyA']||keys['KeyD'])
+    {
+        //if the player presses move keys then we are moving!
+        isMoving=true;
+        armSwingPhase+=armDelta*armSwingSpeed;
+    }else{
+        if(armSwingPhase%(2*Math.PI)>0.1){
+            armSwingPhase+=armDelta*armSwingSpeed*0.5;
+        }else{
+            armSwingPhase=0;
+        }
+    }
+    if (isMoving || armSwingPhase !== 0) {
+        //calculating swing based on sin waves 
+        const rightArmSwing = Math.sin(armSwingPhase) * armSwingAmount;
+        const leftArmSwing = Math.sin(armSwingPhase + Math.PI) * armSwingAmount; // Opposite phase
+        
+        //rotating thse arms by applying the swing 
+        playerArms.rightArm.rotation.x = 0.3 + rightArmSwing;
+        playerArms.leftArm.rotation.x = 0.3 + leftArmSwing;
+        
+        // moving a little bit left and right 
+        playerArms.rightArm.position.y = -0.3 + Math.abs(rightArmSwing) * 0.05;
+        playerArms.leftArm.position.y = -0.3 + Math.abs(leftArmSwing) * 0.05;
+      }
+}
 // Controls
 const controls = new PointerLockControls(camera, document.body);
 document.addEventListener('click', () => controls.lock());
@@ -672,7 +834,7 @@ function animate() {
     if (keys['KeyS']) controls.moveForward(-final_speed);
     if (keys['KeyA']) controls.moveRight(-final_speed);
     if (keys['KeyD']) controls.moveRight(final_speed);
-    
+    animateArms();
     // Every 1 seconds
     setInterval(randomizeWind, 3000); 
     current_time = clock.getElapsedTime();
