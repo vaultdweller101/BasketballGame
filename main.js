@@ -208,14 +208,14 @@ camera.add(crosshair);
 const chargingBarBackgroundGeometry = new THREE.PlaneGeometry(0.1, 0.01);
 const chargingBarBackgroundMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }); // black
 const chargingBarBackground = new THREE.Mesh(chargingBarBackgroundGeometry, chargingBarBackgroundMaterial);
-chargingBarBackground.position.set(0, -0.05, -0.1);
+chargingBarBackground.position.set(0, 0.05, -0.1);
 camera.add(chargingBarBackground);
 
 // Charging bar to indicate how much power the player is using to shoot the ball
 const chargingBarGeometry = new THREE.PlaneGeometry(0.1, 0.01);
 const chargingBarMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); 
 const chargingBar = new THREE.Mesh(chargingBarGeometry, chargingBarMaterial);
-chargingBar.position.set(0, -0.05, -0.1);
+chargingBar.position.set(0, 0.05, -0.1);
 camera.add(chargingBar);
 
 // texturing used for hoop
@@ -536,7 +536,7 @@ function shootBall() {
     const createdAt = clock.getElapsedTime();
     // default ball speed is 10 m/s
     balls.push({ mesh: ball, velocity: direction.multiplyScalar(10 * multiplier), 
-        score: false, from: ball.position, collision_immune: false, collision_time: 0 ,createdAt: createdAt});
+        score: false, from: ball.position.clone(), collision_immune: false, collision_time: 0 ,createdAt: createdAt});
 }
 
 // Charging
@@ -763,8 +763,8 @@ function ballSimulation(ballObj, delta){
     // Scoring
     if ( scoreBS.containsPoint(ballObj.mesh.position) && ballObj.velocity.y < 0 && ballObj.score == false){
         ballObj.score = true;
-        console.log("Score!");
-        if (ballObj.from.distanceTo(rim.position) >= 2.2){
+        console.log("Score from: " + ballObj.from.distanceTo(rim.position) + " meters away");
+        if (ballObj.from.distanceTo(rim.position) >= 7){
             scorePerShot = 3;
         }
         else{
@@ -856,6 +856,7 @@ function animate() {
     });
     
     renderer.render(scene, camera);
+    // console.log(camera.position.distanceTo(rim.position));
 }
 
 camera.position.set(0, 1.5, 5);
