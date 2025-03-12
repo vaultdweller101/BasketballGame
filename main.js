@@ -717,7 +717,7 @@ function ballSimulation(ballObj, delta){
     which_sphere_net = check_collision_against_spheres(ballBS, net_spheres);
 
     // Check if the ball hit the ground
-    if (ballObj.mesh.position.y - land.position.y <= 0.3){
+    if (ballObj.mesh.position.y - land.position.y <= 0.2){
         // apply bounce
         ballObj.velocity.y = Math.abs(ballObj.velocity.y);
         // the bounce absorb some energy, thus decrease the velocity
@@ -774,7 +774,7 @@ function ballSimulation(ballObj, delta){
     }
 
     // apply gravity, lift and drag only while on air
-    if (ballObj.mesh.position.y - land.position.y > 0.3){
+    if (ballObj.mesh.position.y - land.position.y > 0.2){
         ballObj.velocity.y -=  9.8 * delta; 
 
         // Calculate lift: https://www.grc.nasa.gov/www/k-12/VirtualAero/BottleRocket/airplane/beach.html
