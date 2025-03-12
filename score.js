@@ -33,3 +33,9 @@ export function updateScore(scorePerShot, amountofBalls) {
     }
     scoreDisplay.innerHTML = `Score: ${score} Rating: ${rating}`;
 }
+
+export function getScore() {
+    return score;
+}
+
+export function setScore(value){  score = value;}

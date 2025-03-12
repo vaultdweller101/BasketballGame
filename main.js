@@ -7,7 +7,7 @@ import {createHalfCourtFloor} from './halfcourt.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { mx_fractal_noise_float } from 'three/src/nodes/TSL.js';
 import loadBasketballCourt from './models/court/basketballCourt.js';
-import {updateScore} from './score.js';
+import {updateScore, getScore} from './score.js';
 import loadNet from './models/net/net.js';
 import ctreeLoad from './models/cocotree/cTree.js';
 import stLightLoad from './models/stadLights/lights.js';
@@ -45,10 +45,29 @@ timerDisplay.style.fontSize = '24px';
 timerDisplay.style.background = 'rgba(0, 0, 0, 0.7)'; // Semi-transparent background
 timerDisplay.style.padding = '10px 15px';
 timerDisplay.style.borderRadius = '5px';
+timerDisplay.style.fontFamily = 'Arial, sans-serif';
 document.body.appendChild(timerDisplay);
 
+// Create High Score Display
+const highScoreDisplay = document.createElement('div');
+highScoreDisplay.id = 'highScoreDisplay';
+highScoreDisplay.style.position = 'fixed';
+highScoreDisplay.style.top = '80px';
+highScoreDisplay.style.right = '20px';
+highScoreDisplay.style.color = 'white';
+highScoreDisplay.style.fontSize = '20px';
+highScoreDisplay.style.background = 'rgba(0, 0, 0, 0.7)';
+highScoreDisplay.style.padding = '10px 15px';
+highScoreDisplay.style.borderRadius = '5px';
+highScoreDisplay.style.fontFamily = 'Arial, sans-serif';
+document.body.appendChild(highScoreDisplay);
+
+// Load High Score from localStorage (or set to 0 if not found)
+let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
+highScoreDisplay.innerText = `High Score: ${highScore}`;
+
 // Function to update the timer
-let timeLeft = 20; // 20 seconds to play
+let timeLeft = 60; // 20 seconds to play
 let endGame = false;
 
 function updateTimer() {
@@ -62,7 +81,26 @@ function updateTimer() {
     } else {
         endGame = true;
         timerDisplay.innerText = "Time's Up!";
+        endGameFunc();
     }
+}
+
+// Function to end the game and show a popup
+function endGameFunc() {
+    let playerScore = getScore(); // Call your existing function to get the player's score
+
+    // Check if player beats the high score
+    if (playerScore > highScore) {
+        highScore = playerScore; // Update high score
+        localStorage.setItem('highScore', highScore); // Save new high score to localStorage
+        highScoreDisplay.innerText = `High Score: ${highScore}`; // Update UI
+    }
+
+    // let playAgain = confirm(`Time's Up!\nYour Score: ${playerScore}\nDo you want to try again?`);
+
+    // if (playAgain) {
+    //     location.reload(); // Reload the game if the player wants to try again
+    // }
 }
 
 // Function to start the game after a few seconds
