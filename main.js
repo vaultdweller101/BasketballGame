@@ -14,6 +14,34 @@ import stLightLoad from './models/stadLights/lights.js';
 import createWall from './walls_fences/wallManager.js';
 import { create_spheres, check_collision_against_spheres } from './collision_spheres.js';
 
+// Create Loading Screen Overlay
+const loadingScreen = document.createElement('div');
+loadingScreen.id = 'loadingScreen';
+loadingScreen.style.position = 'fixed';
+loadingScreen.style.width = '100%';
+loadingScreen.style.height = '100%';
+loadingScreen.style.background = 'rgba(0, 0, 0, 0.8)';
+loadingScreen.style.display = 'flex';
+loadingScreen.style.alignItems = 'center';
+loadingScreen.style.justifyContent = 'center';
+loadingScreen.style.color = 'white';
+loadingScreen.style.fontSize = '24px';
+loadingScreen.style.zIndex = '10';
+
+const loadingText = document.createElement('p');
+loadingText.innerText = 'Loading...';
+
+loadingScreen.appendChild(loadingText);
+document.body.appendChild(loadingScreen);
+
+// Function to start the game after a few seconds
+setTimeout(() => {
+    loadingScreen.style.display = 'none'; // Hide loading screen
+    document.addEventListener('click', () => controls.lock()); // Enable controls
+    animate(); // Start the game loop
+}, 2000); // 2000 milliseconds 
+
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
@@ -867,3 +895,4 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
