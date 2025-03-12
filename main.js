@@ -34,13 +34,44 @@ loadingText.innerText = 'Loading...';
 loadingScreen.appendChild(loadingText);
 document.body.appendChild(loadingScreen);
 
+// Create Timer Display
+const timerDisplay = document.createElement('div');
+timerDisplay.id = 'timerDisplay';
+timerDisplay.style.position = 'fixed';
+timerDisplay.style.top = '20px';
+timerDisplay.style.right = '20px';
+timerDisplay.style.color = 'white';
+timerDisplay.style.fontSize = '24px';
+timerDisplay.style.background = 'rgba(0, 0, 0, 0.7)'; // Semi-transparent background
+timerDisplay.style.padding = '10px 15px';
+timerDisplay.style.borderRadius = '5px';
+document.body.appendChild(timerDisplay);
+
+// Function to update the timer
+let timeLeft = 20; // 20 seconds to play
+let endGame = false;
+
+function updateTimer() {
+    let minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+    timerDisplay.innerText = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+    if (timeLeft > 0) {
+        timeLeft--;
+        setTimeout(updateTimer, 1000); // Call every second
+    } else {
+        endGame = true;
+        timerDisplay.innerText = "Time's Up!";
+    }
+}
+
 // Function to start the game after a few seconds
 setTimeout(() => {
     loadingScreen.style.display = 'none'; // Hide loading screen
     document.addEventListener('click', () => controls.lock()); // Enable controls
     animate(); // Start the game loop
+    updateTimer(); // Start the timer
 }, 2000); // 2000 milliseconds 
-
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -789,7 +820,7 @@ function ballSimulation(ballObj, delta){
     }
 
     // Scoring
-    if ( scoreBS.containsPoint(ballObj.mesh.position) && ballObj.velocity.y < 0 && ballObj.score == false){
+    if ( scoreBS.containsPoint(ballObj.mesh.position) && ballObj.velocity.y < 0 && ballObj.score == false && endGame == false){
         ballObj.score = true;
         console.log("Score from: " + ballObj.from.distanceTo(rim.position) + " meters away");
         if (ballObj.from.distanceTo(rim.position) >= 7){
@@ -888,7 +919,7 @@ function animate() {
 }
 
 camera.position.set(0, 1.5, 5);
-animate();
+// animate();
 
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
