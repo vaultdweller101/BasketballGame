@@ -1,5 +1,5 @@
 const rimHitSound = new Audio('sounds/BasketballHitRim.mp3'); // Make sure the file exists in the correct path
-rimHitSound.loop = true;
+// rimHitSound.loop = true;
 rimHitSound.volume = 0.7; // Adjust volume (0.0 to 1.0)
 
 const ambientSound = new Audio('sounds/ambientNoise.mp3'); // Replace with your actual sound file

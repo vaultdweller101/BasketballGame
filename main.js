@@ -795,6 +795,7 @@ function randomizeWind() {
 let final_velocity = new THREE.Vector3(0,0,0);
 let which_sphere;
 let which_sphere_net;
+const rho = 1.3; // density of air in kg/m^3
 // mass of basketball: 600 g = 0.6 kg
 const mass = 0.6;
 let drag_acceleration = new THREE.Vector3(0,0,0);
@@ -889,8 +890,9 @@ function ballSimulation(ballObj, delta){
         spinAxis.crossVectors(ballObj.velocity, projection).normalize();
         // Apply lift, whose normalized vector is a cross product between flow direction and axis of rotation
         lift_acceleration.crossVectors(spinAxis, flow).normalize();
-        // F = (0.3 * 2 * Math.PI * rotational_velocity * radius * radius * |ball_velocity - wind_velocity|) * (2 * radius) * (pi / 4)
-        lift_acceleration.multiplyScalar(0.3 * 2 * Math.PI * angular_velocity * 0.15 * 0.15 * flow.length() * 2 * 0.15 * Math.PI / 4);
+        // F = Rho  *      G                                              *   v                              * 2r           * pi/4
+        // F = (1.3 * 2 * Math.PI * rotational_velocity * radius * radius * |ball_velocity - wind_velocity|) * (2 * radius) * (pi / 4)
+        lift_acceleration.multiplyScalar(rho * 2 * Math.PI * angular_velocity * 0.15 * 0.15 * flow.length() * 2 * 0.15 * Math.PI / 4);
         // a = F/m
         lift_acceleration.divideScalar(mass);
         ballObj.velocity.add(lift_acceleration.multiplyScalar(delta));
@@ -899,7 +901,7 @@ function ballSimulation(ballObj, delta){
         // Drag's direction is that of of air flow
         drag_acceleration.set(flow.x, flow.y, flow.z).normalize();
         // // F = 1/2 * 1.3 * |ball_velocity - wind_velocity|^2 * pi * radius * radius * 0.5
-        drag_acceleration.multiplyScalar(1/2 * 1.3 * flow.length() * flow.length() * Math.PI * 0.15 * 0.15 * 0.5);
+        drag_acceleration.multiplyScalar(1/2 * rho * flow.length() * flow.length() * Math.PI * 0.15 * 0.15 * 0.5);
         // // a = F/m
         drag_acceleration.divideScalar(mass);
         ballObj.velocity.add(drag_acceleration.multiplyScalar(delta));
