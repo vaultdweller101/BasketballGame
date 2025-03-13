@@ -13,7 +13,11 @@ mechanics and movements.
 ## Setup
 
 ```shell
-npm install
+# three.js
+npm install --save three
+
+# vite
+npm install --save-dev vite
 ```
 
 ## Run project

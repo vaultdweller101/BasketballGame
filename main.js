@@ -13,6 +13,8 @@ import ctreeLoad from './models/cocotree/cTree.js';
 import stLightLoad from './models/stadLights/lights.js';
 import createWall from './walls_fences/wallManager.js';
 import { create_spheres, check_collision_against_spheres } from './collision_spheres.js';
+// this is for sound
+import { playRimHitSound, playAmbientSound, playCongratulationSound } from './sound.js';
 
 // Create Loading Screen Overlay
 const loadingScreen = document.createElement('div');
@@ -109,6 +111,7 @@ setTimeout(() => {
     document.addEventListener('click', () => controls.lock()); // Enable controls
     animate(); // Start the game loop
     updateTimer(); // Start the timer
+    playAmbientSound(); // Start the ambient sound
 }, 2000); // 2000 milliseconds 
 
 const scene = new THREE.Scene();
@@ -834,6 +837,7 @@ function ballSimulation(ballObj, delta){
             // collision immune
             ballObj.collision_immune = true;
             ballObj.collision_time = clock.getElapsedTime();
+            playRimHitSound();
         }
     }
     // Check if the ball hit the support
@@ -843,12 +847,14 @@ function ballSimulation(ballObj, delta){
         ballObj.velocity.applyAxisAngle(supportNormals, -angle);
         // // apply bounce
         ballObj.velocity.multiplyScalar(-1);
+        playRimHitSound();
     }
     // Check if the ball hit the rim
     else if (which_sphere != -1){
         ballToRim.subVectors(spheres[which_sphere].center, ballObj.mesh.position).normalize();
         ballObj.velocity.reflect(ballToRim);
         ballObj.velocity.y = - Math.abs(ballObj.velocity.y);
+        playRimHitSound();
     }
 
     // Check if the ball hit the net
@@ -868,6 +874,7 @@ function ballSimulation(ballObj, delta){
             scorePerShot = 2;
         }
         updateScore(scorePerShot, balls.length);
+        playCongratulationSound();
     }
 
     // apply gravity, lift and drag only while on air
