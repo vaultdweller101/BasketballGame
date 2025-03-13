@@ -603,7 +603,7 @@ const keys = {};
 document.addEventListener('keydown', (event) => (keys[event.code] = true));
 document.addEventListener('keyup', (event) => (keys[event.code] = false));
 // Running speed: 10 m/s
-const speed = 30;
+const speed = 10;
 
 // Create a texture loader
 const textureLoaderBall = new THREE.TextureLoader();
