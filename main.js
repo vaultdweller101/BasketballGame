@@ -70,7 +70,8 @@ document.body.appendChild(highScoreDisplay);
 // Load High Score from localStorage (or set to 0 if not found)
 let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
 highScoreDisplay.innerText = `High Score: ${highScore}`;
-
+//will be used later for animation
+let isAnimating = false;
 // Function to update the timer
 let timeLeft = 60; // 20 seconds to play
 let endGame = false;
@@ -562,11 +563,11 @@ function createPlayerArms() {
     const leftArmComponents = createArm(false);
   
     // Position arms relative to the camera
-    rightArmComponents.group.position.set(0.25, -0.2, -0.25);
-    leftArmComponents.group.position.set(-0.25, -0.2, -0.25);
+    rightArmComponents.group.position.set(0.50, -0.2, -0.25);
+    leftArmComponents.group.position.set(-0.50, -0.2, -0.25);
   
-    rightArmComponents.group.rotation.set(0.3, 0, -0.1);
-    leftArmComponents.group.rotation.set(0.3, 0, 0.1);
+    rightArmComponents.group.rotation.set(0.7, 0, -0.1);
+    leftArmComponents.group.rotation.set(0.7, 0, 0.1);
   
     // Add arms to the main group
     armsGroup.add(rightArmComponents.group);
@@ -609,6 +610,8 @@ const armClock = new THREE.Clock();
 
 //animating them seprately 
 function animatePlayerArms(playerArms, keys, deltaTime) {
+    if(isAnimating) return;
+
     const armSwingSpeed = 5;
     const armSwingAmount = 0.3;
     
@@ -652,6 +655,9 @@ function animatePlayerArms(playerArms, keys, deltaTime) {
   }
 //creating an anamation for when player shoot the ball
 function animateShootingMotion(playerArms) {
+    //checking to see if we have an animation in progress 
+    if(isAnimating) return;
+    isAnimating=true;
     //storing the original postions to go back to them later 
     const originalRightRotation = playerArms.rightArm.rotation.clone();
     const originalLeftRotation = playerArms.leftArm.rotation.clone();
@@ -659,7 +665,7 @@ function animateShootingMotion(playerArms) {
     const originalLeftForearmRotation = playerArms.leftForearm.rotation.clone();
     
     // how long the animation will last set it to 5 seconds 
-    const duration = 0.5;
+    const duration = 0.1;
     //start time is set to the time this function is called
     const startTime = performance.now();
     
@@ -699,9 +705,10 @@ function animateShootingMotion(playerArms) {
           playerArms.leftArm.rotation.copy(originalLeftRotation);
           playerArms.rightForearm.rotation.copy(originalRightForearmRotation);
           playerArms.leftForearm.rotation.copy(originalLeftForearmRotation);
+          //adjusting the fact that it is not animating anymore
+          isAnimating=false;
         }, 200);
-        //shoting the ball after we have exectuted the first half of the animation 
-        shootBall();
+        
       }
     }
     
@@ -800,8 +807,12 @@ function jump() {
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {
         animateShootingMotion(playerArms);
+       
         charge_ball();
-        // shootBall(); // will now shoot after animation is done, called inside animateShooting 
+
+        shootBall();
+       
+
     }
     if (event.code === 'KeyT') { 
         if (isNight) {
@@ -1065,7 +1076,7 @@ function animate() {
     if (keys['KeyS']) controls.moveForward(-final_speed);
     if (keys['KeyA']) controls.moveRight(-final_speed);
     if (keys['KeyD']) controls.moveRight(final_speed);
-    animatePlayerArms(playerArms, keys, delta);
+    //animatePlayerArms(playerArms, keys, delta);
     // Every 1 seconds
     setInterval(randomizeWind, 3000); 
     current_time = clock.getElapsedTime();
