@@ -1,23 +1,23 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { call } from 'three/tsl';
 
 // Function to load a GLTF model
-function loadFence(callback) {
+function loadBleacher(callback) {
     // Create a GLTF loader
     const loader = new GLTFLoader();
 
     // Load the model
     loader.load(
         // URL to the GLB or GLTF file
-        '/models/fence/scene.gltf',
+        '/models/bleachers/scene.gltf',
 
         // Called when the model is successfully loaded
         function (gltf) {
-            const fence = gltf.scene;
+            const bleacher = gltf.scene;
             // fence.position.set(0, -.9, 6.9);
-            fence.scale.set(1, 1, 1);
+            bleacher.scale.set(25, 25, 25);
+            bleacher.rotation.y = Math.PI / 2;
 
-            callback(fence);
+            callback(bleacher);
         },
 
         // Called while loading is in progress
@@ -27,9 +27,9 @@ function loadFence(callback) {
 
         // Called if loading fails
         function (error) {
-            console.error('An error occurred while loading the fence:', error);
+            console.error('An error occurred while loading the bleacher:', error);
         }
     );
 }
 
-export default loadFence;
+export default loadBleacher;
