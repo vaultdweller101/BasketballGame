@@ -22,7 +22,6 @@ function loadBasketballCourt(scene, renderer) {
             const court = gltf.scene;
             court.position.set(0, -.07, 9);   
             court.scale.set(1.1, 1.1, 1.1);      
-            // court.rotation.y = Math.PI / 2;
 
             // Apply clipping plane to the court material
             court.traverse((child) => {

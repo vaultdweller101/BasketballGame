@@ -11,7 +11,8 @@ import {updateScore, getScore} from './score.js';
 import loadNet from './models/net/net.js';
 import ctreeLoad from './models/cocotree/cTree.js';
 import stLightLoad from './models/stadLights/lights.js';
-import createWall from './walls_fences/wallManager.js';
+import createWall from './walls_bleachers/wallManager.js';
+import createBleacher from './walls_bleachers/bleacherManager.js';
 import { create_spheres, check_collision_against_spheres } from './collision_spheres.js';
 // this is for sound
 import { playRimHitSound, playAmbientSound, playCongratulationSound } from './sound.js';
@@ -355,6 +356,8 @@ loadBasketballCourt(scene, renderer);
 loadNet(scene, renderer);
 
 createWall(scene, renderer);
+
+createBleacher(scene, renderer);
 
 // support for the hoop
 
