@@ -16,7 +16,26 @@ function loadNet(scene, renderer) {
             const net = gltf.scene;
             net.position.set(0, 1.7, -6.04);
             net.scale.set(.35, .35, .35);      
-            // court.rotation.y = Math.PI / 2;
+            
+            net.traverse((child) => {
+                if (child.isMesh) {
+                    // Clone material to avoid affecting shared instances
+                    child.material = child.material.clone();
+                    // Set shadow properties
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    // Optionally, convert MeshBasicMaterial to MeshStandardMaterial
+                    if (child.material.type === 'MeshBasicMaterial') {
+                        const oldMaterial = child.material;
+                        child.material = new THREE.MeshStandardMaterial({
+                        map: oldMaterial.map,
+                        color: oldMaterial.color,
+                        roughness: 0.8,
+                        metalness: 0.1
+                        });
+                    }
+                }
+            });
 
             // Add the model to the scene
             scene.add(net);
