@@ -977,6 +977,13 @@ function ballSimulation(ballObj, delta){
         ballObj.velocity.y = - Math.abs(ballObj.velocity.y);
         playRimHitSound();
     }
+    // spheres.forEach(sphere => {
+    //     const sphereBS = new THREE.Sphere().copy(sphere);
+    //     if (sphereBS.intersectsSphere(ballBS)){
+    //         ballObj.velocity.multiplyScalar(-1);
+    //         playRimHitSound();
+    //     }
+    // });
 
     // // Check if the ball hit the net
     // Check if the ball hit any of the side collision boxes
