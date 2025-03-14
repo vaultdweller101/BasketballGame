@@ -1,0 +1,11 @@
+Model Information:
+* title:	Arm
+* source:	https://sketchfab.com/3d-models/arm-76c7f128c3fd427ca939c3050ae95e26
+* author:	Just8 (https://sketchfab.com/Just8)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Arm" (https://sketchfab.com/3d-models/arm-76c7f128c3fd427ca939c3050ae95e26) by Just8 (https://sketchfab.com/Just8) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
