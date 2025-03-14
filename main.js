@@ -801,7 +801,7 @@ document.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {
         animateShootingMotion(playerArms);
         charge_ball();
-        //shootBall(); will now shoot after animation is done, called inside animateShooting 
+        // shootBall(); // will now shoot after animation is done, called inside animateShooting 
     }
     if (event.code === 'KeyT') { 
         if (isNight) {
@@ -820,30 +820,36 @@ setDayMode();
 
 // Deconstruct rim into a bunch of spheres
 const spheres = [];
-// Deconstruct net into a bunch of spheres
-const net_spheres = [];
-
 // rim.visible = false;
 
 // For the rim itself
 create_spheres(50, rim.position, 0.02, 0.3, spheres);
 // For the net
-// const net_collision_sphere_size = 0.02;
-// let rim_position_1 = rim.position.clone();
-// let delta_width = 0.02;
-// let new_radius = 0.34;
+const collisionBoxes = [];
 
-// for (let i = 0; i < 8; i ++ ){
-//     rim_position_1.y -= 0.05;
-//     new_radius -= delta_width;
-//     create_spheres(50, rim_position_1, net_collision_sphere_size, new_radius, net_spheres);
-// }
+// Function to create a collision box
+function createCollisionBox(position) {
+    const boxGeometry = new THREE.BoxGeometry(0.05, 0.5, 0.05); // Thin vertical box
+    const boxMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true }); // Red wireframe for debugging
+    const box = new THREE.Mesh(boxGeometry, boxMaterial);
+    box.visible = false; // Hide the box
+    
+    box.position.set(position.x, position.y, position.z);
+    scene.add(box);
 
-// for (let i = 0; i < 4; i ++){
-//     rim_position_1.y -= 0.05;
-//     create_spheres(50, rim_position_1, net_collision_sphere_size, new_radius, net_spheres);
-// }
+    collisionBoxes.push(box); // Store for collision checks
+}
 
+// Define positions for the 4 collision boxes
+const boxPositions = [
+    { x: rim.position.x + 0.3, y: rim.position.y - 0.3, z: rim.position.z }, // Right side
+    { x: rim.position.x - 0.3, y: rim.position.y - 0.3, z: rim.position.z }, // Left side
+    { x: rim.position.x, y: rim.position.y - 0.3, z: rim.position.z + 0.3 }, // Front side
+    { x: rim.position.x, y: rim.position.y - 0.3, z: rim.position.z - 0.3 }  // Back side
+];
+
+// Create the boxes
+boxPositions.forEach(pos => createCollisionBox(pos));
 
 // Specify backboard normals for collision detection for front and side
 const backboardNormals = new THREE.Vector3(0, 0, 1);
@@ -973,10 +979,15 @@ function ballSimulation(ballObj, delta){
     }
 
     // // Check if the ball hit the net
-    // if (which_sphere_net != -1){
-    //     ballToRim.subVectors(net_spheres[which_sphere_net].center, ballObj.mesh.position).normalize();
-    //     ballObj.velocity.reflect(ballToRim);
-    // }
+    // Check if the ball hit any of the side collision boxes
+    collisionBoxes.forEach(box => {
+        const boxBB = new THREE.Box3().setFromObject(box);
+        if (boxBB.intersectsSphere(ballBS)) {
+            // Reflect the ball as if it hit the net frame
+            ballObj.velocity.x *= -1;
+            ballObj.velocity.z *= -1;
+        }
+    });
 
     // Scoring
     if ( scoreBS.containsPoint(ballObj.mesh.position) && ballObj.velocity.y < 0 && ballObj.score == false && endGame == false){
